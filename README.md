@@ -1,7 +1,7 @@
 # Project Nexus
 
-## Overview of the ProDev Backend Engineering Program
-The ProDev Backend Engineering program focuses on developing scalable server-side applications. Key topics include API development, database management, authentication, deployment practices, and backend integration with frontend systems.
+## Overview of the ProDev Frontend Engineering Program
+The ProDev Frontend Engineering program centers on building responsive, user-friendly web and mobile interfaces. Key topics include UI/UX design, component-based architecture, state management, performance optimization, accessibility, and seamless integration with backend APIs.
 
 ## Major Learnings from the ProDev Frontend Engineering Program
 
