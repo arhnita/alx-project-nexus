@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
+import { ActivityFeed } from './ActivityFeed'
 import {
   Briefcase,
   Users,
@@ -214,6 +215,9 @@ export function RecruiterDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Activity Feed */}
+      <ActivityFeed />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active Job Postings */}

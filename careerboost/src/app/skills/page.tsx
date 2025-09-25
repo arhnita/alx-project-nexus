@@ -404,7 +404,7 @@ export default function SkillsPage() {
                   Delete Skill
                 </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Are you sure you want to delete <span className="font-medium">"{skillToDelete.skillName}"</span>?
+                  Are you sure you want to delete <span className="font-medium">&ldquo;{skillToDelete.skillName}&rdquo;</span>?
                   This action cannot be undone.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

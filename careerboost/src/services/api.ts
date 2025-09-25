@@ -165,6 +165,40 @@ export interface JobsResponse {
   status_code: number
 }
 
+export interface FeedItem {
+  id: number
+  event_type: 'job_posted' | 'company_joined' | 'promotion_active'
+  created_at: string
+  score: string
+  payload: {
+    type: string
+    job?: {
+      id: number
+      title: string
+      company_name: string
+      location: string | null
+      date_posted: string
+      salary_range?: string
+    }
+    company?: {
+      id: number
+      name: string
+      industry?: string
+    }
+    promotion?: {
+      id: number
+      title: string
+      description: string
+      priority: number
+    }
+  }
+}
+
+export interface FeedResponse {
+  results: FeedItem[]
+  next_cursor: string | null
+}
+
 
 class ApiService {
   private baseUrl: string
@@ -393,6 +427,29 @@ class ApiService {
     }
 
     return this.request<JobsResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getFeed(cursor?: string, limit?: number, types?: string[]): Promise<FeedResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    let url = '/api/feed/'
+    const params = new URLSearchParams()
+
+    if (cursor) params.append('cursor', cursor)
+    if (limit) params.append('limit', limit.toString())
+    if (types && types.length > 0) {
+      types.forEach(type => params.append('types', type))
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`
+    }
+
+    return this.request<FeedResponse>(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`
