@@ -125,6 +125,11 @@ export interface AddMultipleSkillsData {
   skills: number[]
 }
 
+export interface DeleteSkillData {
+  user: number
+  skill: number
+}
+
 export interface Job {
   id: number
   title: string
@@ -352,6 +357,22 @@ class ApiService {
     headers.set('Authorization', `Bearer ${accessToken}`)
 
     return this.request<UserSkillsResponse>('/api/skills/user/', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deleteUserSkill(data: DeleteSkillData): Promise<{ success: boolean; message: string }> {
+    const accessToken = localStorage.getItem('access_token')
+
+    // Create headers object explicitly
+    const headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    headers.set('Accept', 'application/json')
+    headers.set('Authorization', `Bearer ${accessToken}`)
+
+    return this.request<{ success: boolean; message: string }>('/api/skills/user/delete/', {
       method: 'POST',
       headers,
       body: JSON.stringify(data)

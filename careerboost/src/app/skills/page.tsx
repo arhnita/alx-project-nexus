@@ -9,10 +9,10 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Skill } from '@/services/api'
-import { Plus, X, Search, Award, TrendingUp, CheckCircle } from 'lucide-react'
+import { Plus, X, Search, Award, TrendingUp, CheckCircle, Trash2 } from 'lucide-react'
 
 export default function SkillsPage() {
-  const { isAuthenticated, logout } = useAuthStore()
+  const { isAuthenticated, logout, user } = useAuthStore()
   const {
     skills,
     userSkills,
@@ -21,11 +21,14 @@ export default function SkillsPage() {
     fetchAllSkills,
     fetchUserSkills,
     addSkillsToUser,
+    deleteUserSkill,
     clearError
   } = useSkillsStore()
   const router = useRouter()
   const [filteredSkills, setFilteredSkills] = useState<Skill[]>([])
   const [showBulkModal, setShowBulkModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [skillToDelete, setSkillToDelete] = useState<{ userId: number; skillId: number; skillName: string } | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSkills, setSelectedSkills] = useState<number[]>([])
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -99,6 +102,25 @@ export default function SkillsPage() {
         ? prev.filter(id => id !== skillId)
         : [...prev, skillId]
     )
+  }
+
+  const handleDeleteClick = (userId: number, skillId: number, skillName: string) => {
+    setSkillToDelete({ userId, skillId, skillName })
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!skillToDelete) return
+
+    try {
+      await deleteUserSkill(skillToDelete.userId, skillToDelete.skillId)
+      showToast('Skill deleted successfully!', 'success')
+      setShowDeleteModal(false)
+      setSkillToDelete(null)
+    } catch (err) {
+      showToast('Failed to delete skill', 'error')
+      console.error('Delete skill error:', err)
+    }
   }
 
 
@@ -216,7 +238,7 @@ export default function SkillsPage() {
                     <Card key={userSkill.id}>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between mb-4">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">
                               {skillDetails?.name || `Skill ID: ${userSkill.skill}`}
                             </h3>
@@ -224,11 +246,24 @@ export default function SkillsPage() {
                               <p className="text-sm text-gray-600">{skillDetails.category}</p>
                             )}
                           </div>
-                        {userSkill.level && (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(userSkill.level)}`}>
-                            {userSkill.level}
-                          </span>
-                        )}
+                          <div className="flex items-center gap-2">
+                            {userSkill.level && (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(userSkill.level)}`}>
+                                {userSkill.level}
+                              </span>
+                            )}
+                            <button
+                              onClick={() => handleDeleteClick(
+                                parseInt(user?.id || '0'),
+                                userSkill.skill,
+                                skillDetails?.name || `Skill ID: ${userSkill.skill}`
+                              )}
+                              className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
+                              title="Delete skill"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                       </div>
 
                       <div className="space-y-2">
@@ -348,6 +383,50 @@ export default function SkillsPage() {
                 >
                   Add {selectedSkills.length} Skill{selectedSkills.length !== 1 ? 's' : ''}
                 </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && skillToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Delete Skill
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Are you sure you want to delete <span className="font-medium">"{skillToDelete.skillName}"</span>?
+                  This action cannot be undone.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <Button
+                    onClick={() => {
+                      setShowDeleteModal(false)
+                      setSkillToDelete(null)
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDeleteConfirm}
+                    variant="danger"
+                    disabled={isLoading}
+                    className="flex-1"
+                  >
+                    {isLoading ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Skill, UserSkill, apiService, AddMultipleSkillsData, ApiError } from '@/services/api'
+import { Skill, UserSkill, apiService, AddMultipleSkillsData, DeleteSkillData, ApiError } from '@/services/api'
 
 interface SkillsState {
   skills: Skill[]
@@ -12,6 +12,7 @@ interface SkillsState {
   fetchAllSkills: () => Promise<void>
   fetchUserSkills: () => Promise<void>
   addSkillsToUser: (skillIds: number[]) => Promise<void>
+  deleteUserSkill: (userId: number, skillId: number) => Promise<void>
   clearError: () => void
   setSkills: (skills: Skill[]) => void
 }
@@ -130,6 +131,28 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
       const errorMessage = error instanceof ApiError
         ? error.message
         : 'Failed to add skills'
+
+      set({
+        isLoading: false,
+        error: errorMessage
+      })
+      throw error
+    }
+  },
+
+  deleteUserSkill: async (userId: number, skillId: number) => {
+    set({ isLoading: true, error: null })
+
+    try {
+      const data: DeleteSkillData = { user: userId, skill: skillId }
+      await apiService.deleteUserSkill(data)
+
+      // Refresh user skills after deleting
+      await get().fetchUserSkills()
+    } catch (error) {
+      const errorMessage = error instanceof ApiError
+        ? error.message
+        : 'Failed to delete skill'
 
       set({
         isLoading: false,
