@@ -130,23 +130,23 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="flex">
+      <div className="lg:flex">
         <Sidebar />
-        <main className="flex-1 p-8">
-          <div className="max-w-6xl mx-auto">
+        <main className="flex-1 lg:ml-0 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Find Jobs</h1>
-                  <p className="text-gray-600">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Find Jobs</h1>
+                  <p className="text-sm sm:text-base text-gray-600">
                     {pagination.count} job{pagination.count !== 1 ? 's' : ''} available
                   </p>
                 </div>
 
                 {/* Search */}
-                <div className="flex gap-2">
-                  <div className="relative flex-1 sm:w-80">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-64 lg:w-80">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       type="text"
@@ -157,7 +157,11 @@ export default function JobsPage() {
                       className="pl-10"
                     />
                   </div>
-                  <Button onClick={handleSearch} disabled={loading}>
+                  <Button
+                    onClick={handleSearch}
+                    disabled={loading}
+                    className="w-full sm:w-auto"
+                  >
                     Search
                   </Button>
                 </div>
@@ -179,7 +183,7 @@ export default function JobsPage() {
             )}
 
             {/* Jobs List */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {jobs.length === 0 && !loading ? (
                 <div className="text-center py-12">
                   <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -191,17 +195,17 @@ export default function JobsPage() {
               ) : (
                 jobs.map((job) => (
                   <Card key={job.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-2 sm:space-y-0">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h2 className="text-xl font-semibold text-gray-900">{job.title}</h2>
+                            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{job.title}</h2>
                             {job.is_promoted && (
-                              <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-current" />
                             )}
                           </div>
 
-                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 mb-3">
                             <div className="flex items-center gap-1">
                               <Building2 className="w-4 h-4" />
                               {job.company_name}
@@ -225,8 +229,8 @@ export default function JobsPage() {
                             }
                           </p>
 
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
                                 Posted {formatDate(job.date_posted)}
@@ -241,11 +245,11 @@ export default function JobsPage() {
 
                             <div className="flex items-center gap-2">
                               {job.categories.length > 0 && (
-                                <div className="flex gap-1">
+                                <div className="flex flex-wrap gap-1">
                                   {job.categories.slice(0, 2).map((category, index) => (
                                     <span
                                       key={index}
-                                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                     >
                                       {category}
                                     </span>
@@ -261,7 +265,7 @@ export default function JobsPage() {
                           </div>
                         </div>
 
-                        <Button className="ml-6">
+                        <Button className="ml-0 sm:ml-6 mt-3 sm:mt-0 w-full sm:w-auto">
                           Apply Now
                         </Button>
                       </div>
@@ -273,12 +277,12 @@ export default function JobsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-600 order-2 sm:order-1">
                   Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, pagination.count)} of {pagination.count} jobs
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 order-1 sm:order-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -286,10 +290,10 @@ export default function JobsPage() {
                     disabled={!pagination.previous || loading}
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="hidden sm:flex items-center gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum
                       if (totalPages <= 5) {
@@ -323,7 +327,7 @@ export default function JobsPage() {
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={!pagination.next || loading}
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>

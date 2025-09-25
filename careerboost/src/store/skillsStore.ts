@@ -9,6 +9,7 @@ interface SkillsState {
   skillsPage: number
   hasMoreSkills: boolean
   fetchSkills: (page?: number) => Promise<void>
+  fetchAllSkills: () => Promise<void>
   fetchUserSkills: () => Promise<void>
   addSkillsToUser: (skillIds: number[]) => Promise<void>
   clearError: () => void
@@ -53,6 +54,41 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
     }
   },
 
+  fetchAllSkills: async () => {
+    set({ isLoading: true, error: null })
+
+    try {
+      let allSkills: Skill[] = []
+      let page = 1
+      let hasMore = true
+
+      while (hasMore) {
+        const response = await apiService.getAllSkills(page)
+        allSkills = [...allSkills, ...response.results]
+        hasMore = !!response.next
+        page++
+      }
+
+      set({
+        skills: allSkills,
+        skillsPage: 1,
+        hasMoreSkills: false,
+        isLoading: false,
+        error: null
+      })
+    } catch (error) {
+      const errorMessage = error instanceof ApiError
+        ? error.message
+        : 'Failed to fetch all skills'
+
+      set({
+        isLoading: false,
+        error: errorMessage
+      })
+      throw error
+    }
+  },
+
   fetchUserSkills: async () => {
     set({ isLoading: true, error: null })
 
@@ -86,11 +122,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
 
     try {
       const data: AddMultipleSkillsData = { skills: skillIds }
-      const response = await apiService.addMultipleUserSkills(data)
-
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to add skills')
-      }
+      await apiService.addMultipleUserSkills(data)
 
       // Refresh user skills after adding
       await get().fetchUserSkills()

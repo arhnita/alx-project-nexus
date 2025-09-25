@@ -99,10 +99,11 @@ export interface Skill {
 
 export interface UserSkill {
   id: number
-  skill: Skill
+  user: number
+  skill: number
   level?: string
   experience_years?: number
-  created_at: string
+  created_at?: string
 }
 
 export type SkillsResponse = PaginatedResponse<Skill>
@@ -314,8 +315,12 @@ class ApiService {
     const accessToken = localStorage.getItem('access_token')
     let url = '/api/skills/user/'
 
-    if (page && pageSize) {
-      url += `?page=${page}&page_size=${pageSize}`
+    const params = new URLSearchParams()
+    if (page) params.append('page', page.toString())
+    if (pageSize) params.append('page_size', pageSize.toString())
+
+    if (params.toString()) {
+      url += `?${params.toString()}`
     }
 
     return this.request<UserSkillsResponse>(url, {

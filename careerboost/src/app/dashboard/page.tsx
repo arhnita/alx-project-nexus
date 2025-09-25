@@ -29,9 +29,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="flex">
+      <div className="lg:flex">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 lg:ml-0 p-4 sm:p-6 lg:p-8">
           {user.userType === 'talent' ? (
             <JobSeekerDashboard />
           ) : (

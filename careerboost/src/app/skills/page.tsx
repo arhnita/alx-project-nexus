@@ -9,7 +9,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Skill } from '@/services/api'
-import { Plus, X, Search, Award, Calendar, TrendingUp, CheckCircle } from 'lucide-react'
+import { Plus, X, Search, Award, TrendingUp, CheckCircle } from 'lucide-react'
 
 export default function SkillsPage() {
   const { isAuthenticated, logout } = useAuthStore()
@@ -18,7 +18,7 @@ export default function SkillsPage() {
     userSkills,
     isLoading,
     error,
-    fetchSkills,
+    fetchAllSkills,
     fetchUserSkills,
     addSkillsToUser,
     clearError
@@ -34,12 +34,12 @@ export default function SkillsPage() {
     try {
       await Promise.all([
         fetchUserSkills(),
-        fetchSkills(1)
+        fetchAllSkills()
       ])
     } catch (err) {
       console.error('Skills fetch error:', err)
     }
-  }, [fetchUserSkills, fetchSkills])
+  }, [fetchUserSkills, fetchAllSkills])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -101,13 +101,6 @@ export default function SkillsPage() {
     )
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   const getLevelColor = (level?: string) => {
     switch (level?.toLowerCase()) {
@@ -139,7 +132,7 @@ export default function SkillsPage() {
 
   // Filter out skills that user already has
   const availableSkills = filteredSkills.filter(skill =>
-    !userSkills.some(userSkill => userSkill.skill.id === skill.id)
+    !userSkills.some(userSkill => userSkill.skill === skill.id)
   )
 
   if (isLoading) {
@@ -161,21 +154,25 @@ export default function SkillsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="flex">
+      <div className="lg:flex">
         <Sidebar />
-        <main className="flex-1 p-8">
-          <div className="max-w-6xl mx-auto">
+        <main className="flex-1 lg:ml-0 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">My Skills</h1>
-                  <p className="text-gray-600">Manage your professional skills and expertise</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Skills</h1>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your professional skills and expertise</p>
                 </div>
                 <div className="flex space-x-3">
-                  <Button onClick={() => setShowBulkModal(true)}>
+                  <Button
+                    onClick={() => setShowBulkModal(true)}
+                    className="w-full sm:w-auto"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Multiple Skills
+                    <span className="hidden sm:inline">Add Multiple Skills</span>
+                    <span className="sm:hidden">Add Skills</span>
                   </Button>
                 </div>
               </div>
@@ -199,7 +196,7 @@ export default function SkillsPage() {
             )}
 
             {/* User Skills */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {userSkills.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -211,16 +208,22 @@ export default function SkillsPage() {
                   </Button>
                 </div>
               ) : (
-                userSkills.map((userSkill) => (
-                  <Card key={userSkill.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{userSkill.skill.name}</h3>
-                          {userSkill.skill.category && (
-                            <p className="text-sm text-gray-600">{userSkill.skill.category}</p>
-                          )}
-                        </div>
+                userSkills.map((userSkill) => {
+                  // Find the skill details from the skills array
+                  const skillDetails = skills.find(s => s.id === userSkill.skill)
+
+                  return (
+                    <Card key={userSkill.id}>
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">
+                              {skillDetails?.name || `Skill ID: ${userSkill.skill}`}
+                            </h3>
+                            {skillDetails?.category && (
+                              <p className="text-sm text-gray-600">{skillDetails.category}</p>
+                            )}
+                          </div>
                         {userSkill.level && (
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(userSkill.level)}`}>
                             {userSkill.level}
@@ -235,14 +238,11 @@ export default function SkillsPage() {
                             {userSkill.experience_years} year{userSkill.experience_years !== 1 ? 's' : ''} experience
                           </div>
                         )}
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Added {formatDate(userSkill.created_at)}
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))
+                  )
+                })
               )}
             </div>
           </div>
@@ -252,11 +252,11 @@ export default function SkillsPage() {
       {/* Bulk Add Skills Modal */}
       {showBulkModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Add Multiple Skills</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Add Multiple Skills</h2>
                   <p className="text-sm text-gray-600 mt-1">
                     {selectedSkills.length} skill{selectedSkills.length !== 1 ? 's' : ''} selected
                   </p>
@@ -274,7 +274,7 @@ export default function SkillsPage() {
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {/* Search Skills */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -301,7 +301,7 @@ export default function SkillsPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {availableSkills.map((skill) => {
                       const isSelected = selectedSkills.includes(skill.id)
                       return (
@@ -329,7 +329,7 @@ export default function SkillsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-3 pt-4 border-t">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t">
                 <Button
                   onClick={() => {
                     setShowBulkModal(false)
@@ -357,7 +357,7 @@ export default function SkillsPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all ${
+          className={`fixed top-4 right-4 left-4 sm:left-auto z-50 p-4 rounded-lg shadow-lg transition-all max-w-sm mx-auto sm:mx-0 ${
             toast.type === 'success'
               ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
