@@ -53,7 +53,7 @@ export function LoginForm() {
     try {
       await loginWithAPI(formData)
       router.push('/dashboard')
-    } catch (err) {
+    } catch {
       // Error handling is done in the store
     }
   }

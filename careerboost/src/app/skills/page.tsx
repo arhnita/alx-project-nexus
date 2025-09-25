@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useSkillsStore } from '@/store/skillsStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Skill, UserSkill } from '@/services/api'
+import { Skill } from '@/services/api'
 import { Plus, X, Search, Award, Calendar, TrendingUp, CheckCircle } from 'lucide-react'
 
 export default function SkillsPage() {
@@ -18,7 +18,6 @@ export default function SkillsPage() {
     userSkills,
     isLoading,
     error,
-    hasMoreSkills,
     fetchSkills,
     fetchUserSkills,
     addSkillsToUser,
@@ -30,6 +29,17 @@ export default function SkillsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSkills, setSelectedSkills] = useState<number[]>([])
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const fetchData = useCallback(async () => {
+    try {
+      await Promise.all([
+        fetchUserSkills(),
+        fetchSkills(1)
+      ])
+    } catch (err) {
+      console.error('Skills fetch error:', err)
+    }
+  }, [fetchUserSkills, fetchSkills])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,18 +58,7 @@ export default function SkillsPage() {
 
     window.addEventListener('sessionExpired', handleSessionExpired)
     return () => window.removeEventListener('sessionExpired', handleSessionExpired)
-  }, [isAuthenticated, router, logout])
-
-  const fetchData = async () => {
-    try {
-      await Promise.all([
-        fetchUserSkills(),
-        fetchSkills(1)
-      ])
-    } catch (err) {
-      console.error('Skills fetch error:', err)
-    }
-  }
+  }, [isAuthenticated, router, logout, fetchData])
 
   const handleSearch = (term: string) => {
     setSearchTerm(term)

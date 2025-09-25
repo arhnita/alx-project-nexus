@@ -97,7 +97,7 @@ export function SignupForm() {
       setTimeout(() => {
         router.push('/login')
       }, 2000)
-    } catch (err) {
+    } catch {
       // Error handling is done in the store
     }
   }

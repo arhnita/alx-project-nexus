@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { apiService, Job, JobsResponse, PaginatedResponse } from '@/services/api'
+import { apiService, Job, JobsResponse } from '@/services/api'
 import {
   Search,
   MapPin,
@@ -41,16 +41,7 @@ export default function JobsPage() {
     previous: null
   })
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login')
-      return
-    }
-
-    fetchJobs()
-  }, [isAuthenticated, router, currentPage])
-
-  const fetchJobs = async (search?: string) => {
+  const fetchJobs = useCallback(async (search?: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -73,7 +64,16 @@ export default function JobsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage, pageSize])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
+    fetchJobs()
+  }, [isAuthenticated, router, fetchJobs])
 
   const handleSearch = async () => {
     setCurrentPage(1)
@@ -305,7 +305,7 @@ export default function JobsPage() {
                       return (
                         <Button
                           key={pageNum}
-                          variant={pageNum === currentPage ? "default" : "outline"}
+                          variant={pageNum === currentPage ? "primary" : "outline"}
                           size="sm"
                           onClick={() => handlePageChange(pageNum)}
                           disabled={loading}
