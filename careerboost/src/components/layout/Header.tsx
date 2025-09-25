@@ -58,9 +58,6 @@ export function Header() {
                     <Link href="/applications" className="text-gray-700 hover:text-blue-600 font-medium">
                       Applications
                     </Link>
-                    <Link href="/network" className="text-gray-700 hover:text-blue-600 font-medium">
-                      Network
-                    </Link>
                   </>
                 )}
                 {isRecruiter && (

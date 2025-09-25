@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import { useUIStore } from '@/store/uiStore'
 import { useSkillsStore } from '@/store/skillsStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Skill } from '@/services/api'
@@ -13,6 +15,7 @@ import { Plus, X, Search, Award, TrendingUp, CheckCircle, Trash2 } from 'lucide-
 
 export default function SkillsPage() {
   const { isAuthenticated, logout, user } = useAuthStore()
+  const { isSidebarCollapsed } = useUIStore()
   const {
     skills,
     userSkills,
@@ -178,7 +181,11 @@ export default function SkillsPage() {
       <Header />
       <div className="lg:flex">
         <Sidebar />
-        <main className="flex-1 lg:ml-0 p-4 sm:p-6 lg:p-8">
+        <main className={cn(
+          'flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300',
+          isSidebarCollapsed ? 'lg:ml-12' : 'lg:ml-0',
+          'ml-0'
+        )}>
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6 sm:mb-8">

@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import { useUIStore } from '@/store/uiStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -24,6 +26,7 @@ import {
 
 export default function JobsPage() {
   const { isAuthenticated } = useAuthStore()
+  const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -132,7 +135,11 @@ export default function JobsPage() {
       <Header />
       <div className="lg:flex">
         <Sidebar />
-        <main className="flex-1 lg:ml-0 p-4 sm:p-6 lg:p-8">
+        <main className={cn(
+          'flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300',
+          isSidebarCollapsed ? 'lg:ml-12' : 'lg:ml-0',
+          'ml-0'
+        )}>
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6 sm:mb-8">

@@ -25,6 +25,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
   const [error, setError] = useState<string | null>(null)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [cursorHistory, setCursorHistory] = useState<string[]>([]) // Store cursor history for navigation
 
   const fetchFeed = useCallback(async (cursor?: string) => {
     try {
@@ -33,6 +34,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
 
       const response: FeedResponse = await apiService.getFeed(cursor, 10)
 
+      console.log('Feed API Response:', response) // Debug log
       setFeedItems(response.results)
       setNextCursor(response.next_cursor)
     } catch (err) {
@@ -49,21 +51,34 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
 
   const handleNextPage = () => {
     if (nextCursor) {
+      // Store current cursor in history before moving to next page
+      setCursorHistory(prev => [...prev, nextCursor])
       fetchFeed(nextCursor)
       setCurrentPage(prev => prev + 1)
     }
   }
 
   const handlePreviousPage = () => {
-    // For now, we'll go back to the first page since API doesn't provide previous cursor
     if (currentPage > 1) {
-      fetchFeed()
-      setCurrentPage(1)
+      if (currentPage === 2) {
+        // Go back to first page
+        fetchFeed()
+        setCurrentPage(1)
+        setCursorHistory([])
+      } else {
+        // Use the previous cursor from history
+        const newHistory = [...cursorHistory]
+        const previousCursor = newHistory.pop() // Remove and get the last cursor
+        setCursorHistory(newHistory.slice(0, -1)) // Remove the cursor we're going back to
+        fetchFeed(previousCursor)
+        setCurrentPage(prev => prev - 1)
+      }
     }
   }
 
   const handleRefresh = () => {
     setCurrentPage(1)
+    setCursorHistory([])
     fetchFeed()
   }
 
@@ -263,8 +278,8 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
               {feedItems.map(renderFeedItem)}
             </div>
 
-            {/* Pagination */}
-            {(nextCursor || currentPage > 1) && (
+            {/* Pagination - Always show if we have feed items */}
+            {feedItems.length > 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                 <div className="text-sm text-gray-600 order-2 sm:order-1">
                   Page {currentPage}
@@ -278,7 +293,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
                     disabled={currentPage <= 1 || loading}
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">First Page</span>
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
 
                   <Button

@@ -1,15 +1,18 @@
 'use client'
 
 import { useAuthStore } from '@/store/authStore'
+import { useUIStore } from '@/store/uiStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { JobSeekerDashboard } from '@/components/dashboard/JobSeekerDashboard'
 import { RecruiterDashboard } from '@/components/dashboard/RecruiterDashboard'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore()
+  const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
 
   useEffect(() => {
@@ -31,7 +34,13 @@ export default function DashboardPage() {
       <Header />
       <div className="lg:flex">
         <Sidebar />
-        <main className="flex-1 lg:ml-0 p-4 sm:p-6 lg:p-8">
+        <main className={cn(
+          'flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300',
+          // Adjust left margin based on sidebar state on desktop
+          isSidebarCollapsed ? 'lg:ml-12' : 'lg:ml-0',
+          // No left margin on mobile
+          'ml-0'
+        )}>
           {user.userType === 'talent' ? (
             <JobSeekerDashboard />
           ) : (
