@@ -90,6 +90,75 @@ export interface ApiResponse<T> {
   success: boolean
 }
 
+export interface Skill {
+  id: number
+  name: string
+  category?: string
+  description?: string
+}
+
+export interface UserSkill {
+  id: number
+  skill: Skill
+  level?: string
+  experience_years?: number
+  created_at: string
+}
+
+export type SkillsResponse = PaginatedResponse<Skill>
+
+export interface UserSkillsResponse {
+  success: boolean
+  message: string
+  data: UserSkill[]
+  status_code: number
+}
+
+export interface AddSkillData {
+  skill_id: number
+  level?: string
+  experience_years?: number
+}
+
+export interface AddMultipleSkillsData {
+  skills: number[]
+}
+
+export interface Job {
+  id: number
+  title: string
+  description: string
+  company: number
+  company_name: string
+  company_description: string
+  address: number
+  address_city: string
+  address_state: string
+  address_country: string
+  location: string
+  salary_range: string
+  date_posted: string
+  close_date: string
+  updated_at: string
+  categories: string[]
+  is_promoted: boolean
+  promotion_priority: number
+}
+
+export interface PaginatedResponse<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
+export interface JobsResponse {
+  success: boolean
+  message: string
+  data: PaginatedResponse<Job>
+  status_code: number
+}
+
 
 class ApiService {
   private baseUrl: string
@@ -106,20 +175,47 @@ class ApiService {
 
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
         ...options.headers,
       },
       mode: 'cors',
       ...options,
     }
 
+    // Debug logging
+    console.log('Request details:', {
+      url,
+      method: config.method,
+      headers: config.headers,
+      body: config.body
+    })
+
     try {
       const response = await fetch(url, config)
       const data = await response.json()
 
       if (!response.ok) {
-        throw new ApiError(data.message || 'An error occurred', data.errors)
+        // Handle 401 unauthorized errors specifically
+        if (response.status === 401) {
+          // Clear tokens from localStorage
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+
+          // Dispatch custom event for session expiration
+          window.dispatchEvent(new CustomEvent('sessionExpired'))
+
+          throw new ApiError('Session expired. Please log in again.')
+        }
+
+        console.error('API Error:', {
+          status: response.status,
+          url,
+          data,
+          response
+        })
+
+        throw new ApiError(data.message || `HTTP ${response.status}: ${response.statusText}`, data.errors)
       }
 
       return data
@@ -132,7 +228,7 @@ class ApiService {
   }
 
   async signup(signupData: SignupData): Promise<SignupResponse> {
-    return this.request<SignupResponse>('/api/users/', {
+    return this.request<SignupResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(signupData),
     })
@@ -195,6 +291,86 @@ class ApiService {
         'Authorization': `Bearer ${accessToken}`
       },
       body: JSON.stringify(data)
+    })
+  }
+
+  async getAllSkills(page?: number): Promise<SkillsResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    let url = '/api/skills/'
+
+    if (page) {
+      url += `?page=${page}`
+    }
+
+    return this.request<SkillsResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getUserSkills(page?: number, pageSize?: number): Promise<UserSkillsResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    let url = '/api/skills/user/'
+
+    if (page && pageSize) {
+      url += `?page=${page}&page_size=${pageSize}`
+    }
+
+    return this.request<UserSkillsResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async addUserSkill(data: AddSkillData): Promise<UserSkillsResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    return this.request<UserSkillsResponse>('/api/skills/users/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify(data)
+    })
+  }
+
+  async addMultipleUserSkills(data: AddMultipleSkillsData): Promise<UserSkillsResponse> {
+    const accessToken = localStorage.getItem('access_token')
+
+    // Create headers object explicitly
+    const headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    headers.set('Accept', 'application/json')
+    headers.set('Authorization', `Bearer ${accessToken}`)
+
+    return this.request<UserSkillsResponse>('/api/skills/user/', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+  }
+
+  async getJobs(page?: number, pageSize?: number, search?: string): Promise<JobsResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    let url = '/api/jobs/'
+    const params = new URLSearchParams()
+
+    if (page) params.append('page', page.toString())
+    if (pageSize) params.append('page_size', pageSize.toString())
+    if (search) params.append('search', search)
+
+    if (params.toString()) {
+      url += `?${params.toString()}`
+    }
+
+    return this.request<JobsResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
     })
   }
 }

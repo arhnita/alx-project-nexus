@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { JobSeeker, Recruiter } from '@/types'
 import { apiService, SignupData, ApiError, SignupResponse, LoginData, LoginResponse } from '@/services/api'
-import { decodeJWT } from '@/utils/jwt'
+
 
 interface AuthState {
   user: (JobSeeker | Recruiter) | null

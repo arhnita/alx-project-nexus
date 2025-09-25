@@ -14,7 +14,8 @@ import {
   User,
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Award
 } from 'lucide-react'
 
 export function Header() {
@@ -139,6 +140,16 @@ export function Header() {
                         <User className="w-4 h-4 mr-3" />
                         Profile
                       </Link>
+                      {isJobSeeker && (
+                        <Link
+                          href="/skills"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Award className="w-4 h-4 mr-3" />
+                          Skills
+                        </Link>
+                      )}
                       <Link
                         href="/settings"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
