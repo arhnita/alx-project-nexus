@@ -276,7 +276,7 @@ class ApiService {
           response
         })
 
-        throw new ApiError(data.message || `HTTP ${response.status}: ${response.statusText}`, data.errors)
+        throw new ApiError(data.message || `HTTP ${response.status}: ${response.statusText}`, data.errors || data.data?.errors)
       }
 
       return data
@@ -289,7 +289,7 @@ class ApiService {
   }
 
   async signup(signupData: SignupData): Promise<SignupResponse> {
-    return this.request<SignupResponse>('/api/auth/register', {
+    return this.request<SignupResponse>('/api/auth/register/', {
       method: 'POST',
       body: JSON.stringify(signupData),
     })

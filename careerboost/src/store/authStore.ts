@@ -192,9 +192,24 @@ export const useAuthStore = create<AuthState>()(
             error: null
           })
         } catch (error) {
-          const errorMessage = error instanceof ApiError
-            ? error.message
-            : 'Registration failed'
+          let errorMessage = 'Registration failed'
+
+          if (error instanceof ApiError) {
+            // Check for specific field errors first
+            if (error.errors) {
+              const fieldErrors = []
+              for (const [field, messages] of Object.entries(error.errors)) {
+                if (field === 'non_field_errors') {
+                  fieldErrors.push(...messages)
+                } else {
+                  fieldErrors.push(`${field}: ${messages.join(', ')}`)
+                }
+              }
+              errorMessage = fieldErrors.length > 0 ? fieldErrors.join('; ') : error.message
+            } else {
+              errorMessage = error.message
+            }
+          }
 
           set({
             isLoading: false,
