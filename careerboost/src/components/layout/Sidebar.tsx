@@ -13,7 +13,6 @@ import {
   BarChart3,
   Settings,
   Briefcase,
-  User,
   Building2,
   Target,
   Menu,
@@ -54,11 +53,6 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
       title: 'Skill Assessment',
       href: '/skills',
       icon: Target
-    },
-    {
-      title: 'Profile',
-      href: '/profile',
-      icon: User
     }
   ]
 

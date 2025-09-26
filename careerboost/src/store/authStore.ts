@@ -16,6 +16,7 @@ interface AuthState {
   signup: (data: SignupData) => Promise<void>
   clearError: () => void
   updateUser: (updates: Partial<JobSeeker | Recruiter>) => void
+  restoreSession: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -211,6 +212,40 @@ export const useAuthStore = create<AuthState>()(
         const currentUser = get().user
         if (currentUser) {
           set({ user: { ...currentUser, ...updates } as JobSeeker | Recruiter })
+        }
+      },
+
+      restoreSession: async () => {
+        const accessToken = localStorage.getItem('access_token')
+        const refreshToken = localStorage.getItem('refresh_token')
+
+        // If no tokens, clear any persisted auth state
+        if (!accessToken && !refreshToken) {
+          set({ user: null, isAuthenticated: false, error: null })
+          return
+        }
+
+        // If we have persisted user but no tokens, logout
+        const state = get()
+        if (state.isAuthenticated && !accessToken) {
+          set({ user: null, isAuthenticated: false, error: null })
+          return
+        }
+
+        // If we have tokens and persisted state, validate by fetching profile
+        if (accessToken && state.isAuthenticated && state.user) {
+          try {
+            set({ isLoading: true })
+            await apiService.getUserProfile()
+            // Profile fetch succeeded, session is valid
+            set({ isLoading: false })
+          } catch (error) {
+            // Profile fetch failed, tokens are invalid
+            console.error('Session validation failed:', error)
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('refresh_token')
+            set({ user: null, isAuthenticated: false, isLoading: false, error: null })
+          }
         }
       }
     }),

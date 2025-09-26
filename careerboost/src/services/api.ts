@@ -137,12 +137,17 @@ export interface Job {
   company: number
   company_name: string
   company_description: string
-  address: number
-  address_city: string
-  address_state: string
-  address_country: string
-  location: string
-  salary_range: string
+  physical_address: {
+    city: string
+    state: string
+    street: string
+    country: string
+    zip_code: string
+  }
+  city: number
+  city_name: string
+  salary_min: string
+  salary_max: string
   date_posted: string
   close_date: string
   updated_at: string
@@ -158,12 +163,7 @@ export interface PaginatedResponse<T> {
   results: T[]
 }
 
-export interface JobsResponse {
-  success: boolean
-  message: string
-  data: PaginatedResponse<Job>
-  status_code: number
-}
+export type JobsResponse = PaginatedResponse<Job>
 
 export interface FeedItem {
   id: number
@@ -198,6 +198,27 @@ export interface FeedResponse {
   results: FeedItem[]
   next_cursor: string | null
 }
+
+export interface FileUpload {
+  id?: number
+  file_path: string
+  name: string
+  thumbnail?: string
+  content_type: string
+  object_id: number
+  type: 'resume' | 'cover_letter'
+  created_at?: string
+  updated_at?: string
+}
+
+export interface FileUploadResponse {
+  success: boolean
+  message: string
+  data: FileUpload
+  status_code: number
+}
+
+export type FileListResponse = PaginatedResponse<FileUpload>
 
 
 class ApiService {
@@ -451,6 +472,76 @@ class ApiService {
 
     return this.request<FeedResponse>(url, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async uploadFile(file: File, type: 'resume' | 'cover_letter', userId: number, name?: string): Promise<FileUploadResponse> {
+    const accessToken = localStorage.getItem('access_token')
+
+    // Convert file to base64 since file_path might expect base64 content
+    const fileBase64 = await this.fileToBase64(file)
+
+    const uploadData = {
+      file_path: fileBase64, // Base64 content of the file
+      name: name || file.name.split('.')[0],
+      thumbnail: '', // Optional thumbnail
+      content_type: file.type,
+      object_id: userId,
+      type: type
+    }
+
+    return this.request<FileUploadResponse>('/api/uploads/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(uploadData)
+    })
+  }
+
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => {
+        const result = reader.result as string
+        // Return full data URL (includes data:application/pdf;base64,...)
+        resolve(result)
+      }
+      reader.onerror = error => reject(error)
+    })
+  }
+
+  async getUploadedFiles(type?: 'resume' | 'cover_letter', page?: number, pageSize?: number): Promise<FileListResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    let url = '/api/uploads/'
+    const params = new URLSearchParams()
+
+    if (type) params.append('type', type)
+    if (page) params.append('page', page.toString())
+    if (pageSize) params.append('page_size', pageSize.toString())
+
+    if (params.toString()) {
+      url += `?${params.toString()}`
+    }
+
+    return this.request<FileListResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async deleteUploadedFile(fileId: number): Promise<{ success: boolean; message: string }> {
+    const accessToken = localStorage.getItem('access_token')
+
+    return this.request<{ success: boolean; message: string }>(`/api/uploads/${fileId}/`, {
+      method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }

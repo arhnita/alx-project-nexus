@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import { useNotificationStore } from '@/store/notificationStore'
 import { Button } from '@/components/ui/Button'
+import { NotificationDropdown } from '@/components/ui/NotificationDropdown'
 import {
   Bell,
   Search,
@@ -19,9 +21,26 @@ import {
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore()
+  const {
+    unreadCount,
+    isDropdownOpen,
+    setDropdownOpen,
+    fetchUnreadCount
+  } = useNotificationStore()
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+
+  // Fetch unread count when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUnreadCount()
+
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [isAuthenticated, fetchUnreadCount])
 
   const handleLogout = () => {
     logout()
@@ -104,10 +123,24 @@ export function Header() {
                 </div>
 
                 {/* Notifications */}
-                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setDropdownOpen(!isDropdownOpen)}
+                    className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <NotificationDropdown
+                    isOpen={isDropdownOpen}
+                    onClose={() => setDropdownOpen(false)}
+                  />
+                </div>
 
                 {/* Profile Dropdown */}
                 <div className="relative">

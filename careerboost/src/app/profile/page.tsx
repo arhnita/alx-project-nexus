@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { apiService, UserProfileResponse, UpdateProfileData } from '@/services/api'
-import { User, Mail, Phone, Calendar, Shield, Edit, Save, X, Eye, EyeOff } from 'lucide-react'
+import { apiService, UserProfileResponse, UpdateProfileData, FileUpload, FileListResponse } from '@/services/api'
+import { User, Mail, Phone, Calendar, Shield, Edit, Save, X, Eye, EyeOff, FileText } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { FileUpload as FileUploadComponent } from '@/components/ui/FileUpload'
 
 interface UserProfile {
   id: number
@@ -25,7 +26,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -44,6 +45,28 @@ export default function ProfilePage() {
     password: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [resumeFile, setResumeFile] = useState<FileUpload | null>(null)
+  const [coverLetterFile, setCoverLetterFile] = useState<FileUpload | null>(null)
+  const [documentsLoading, setDocumentsLoading] = useState(false)
+
+  const fetchDocuments = useCallback(async () => {
+    if (!user || user.userType !== 'talent') return
+
+    try {
+      setDocumentsLoading(true)
+      const response: FileListResponse = await apiService.getUploadedFiles(undefined, 1, 20)
+
+      const resume = response.results.find(file => file.type === 'resume')
+      const coverLetter = response.results.find(file => file.type === 'cover_letter')
+
+      setResumeFile(resume || null)
+      setCoverLetterFile(coverLetter || null)
+    } catch (err) {
+      console.error('Failed to fetch documents:', err)
+    } finally {
+      setDocumentsLoading(false)
+    }
+  }, [user])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -52,7 +75,24 @@ export default function ProfilePage() {
     }
 
     fetchProfile()
-  }, [isAuthenticated, router])
+    fetchDocuments()
+  }, [isAuthenticated, router, fetchDocuments])
+
+  const handleResumeUpload = (file: FileUpload) => {
+    setResumeFile(file)
+  }
+
+  const handleCoverLetterUpload = (file: FileUpload) => {
+    setCoverLetterFile(file)
+  }
+
+  const handleResumeDelete = () => {
+    setResumeFile(null)
+  }
+
+  const handleCoverLetterDelete = () => {
+    setCoverLetterFile(null)
+  }
 
   const fetchProfile = async () => {
     try {
@@ -481,6 +521,72 @@ export default function ProfilePage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Documents Section - Only for Talent Users */}
+                {user?.userType === 'talent' && (
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <FileText className="w-5 h-5 mr-2" />
+                        Documents
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {documentsLoading ? (
+                        <div className="flex items-center justify-center h-32">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Resume Upload */}
+                          <div>
+                            <FileUploadComponent
+                              type="resume"
+                              title="Resume / CV"
+                              description="Upload your resume or curriculum vitae"
+                              acceptedTypes={['.pdf', '.doc', '.docx', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']}
+                              maxSizeInMB={10}
+                              userId={profile.id}
+                              existingFile={resumeFile || undefined}
+                              onUploadSuccess={handleResumeUpload}
+                              onDeleteSuccess={handleResumeDelete}
+                            />
+                          </div>
+
+                          {/* Cover Letter Upload */}
+                          <div>
+                            <FileUploadComponent
+                              type="cover_letter"
+                              title="Cover Letter"
+                              description="Upload your cover letter"
+                              acceptedTypes={['.pdf', '.doc', '.docx', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']}
+                              maxSizeInMB={10}
+                              userId={profile.id}
+                              existingFile={coverLetterFile || undefined}
+                              onUploadSuccess={handleCoverLetterUpload}
+                              onDeleteSuccess={handleCoverLetterDelete}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                          <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
+                          <div className="text-sm">
+                            <p className="font-medium text-blue-900 mb-1">Document Tips:</p>
+                            <ul className="text-blue-700 space-y-1">
+                              <li>• Keep your resume updated with latest experience and skills</li>
+                              <li>• Tailor your cover letter for specific job applications</li>
+                              <li>• Supported formats: PDF, DOC, DOCX (up to 10MB each)</li>
+                              <li>• You can replace documents anytime by uploading new ones</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
