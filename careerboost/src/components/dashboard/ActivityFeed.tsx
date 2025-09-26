@@ -151,7 +151,16 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
                     <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{payload.job.title}</h4>
                     <p className="text-sm text-gray-600">{payload.job.company_name}</p>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-gray-500 mt-1">
-                      {payload.job.location && <span>{payload.job.location}</span>}
+                      {payload.job.location && (
+                        <span>
+                          {typeof payload.job.location === 'string'
+                            ? payload.job.location
+                            : typeof payload.job.location === 'object' && payload.job.location !== null
+                              ? `${(payload.job.location as { city: string; state: string }).city}, ${(payload.job.location as { city: string; state: string }).state}`
+                              : ''
+                          }
+                        </span>
+                      )}
                       {payload.job.salary_range && payload.job.location && (
                         <span className="hidden sm:inline">•</span>
                       )}
