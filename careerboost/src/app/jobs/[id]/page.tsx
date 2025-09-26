@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
+import { useJobApplicationStore } from '@/store/jobApplicationStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
 import { cn } from '@/lib/utils'
 import { apiService, Job } from '@/services/api'
 import {
@@ -25,12 +27,11 @@ export default function JobDetailsPage() {
   const { id } = useParams()
   const { isAuthenticated, user } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
+  const { checkAndApply, showSuccess, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const router = useRouter()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [applying, setApplying] = useState(false)
-  const [applied, setApplied] = useState(false)
 
   const fetchJobDetails = useCallback(async () => {
     try {
@@ -60,7 +61,8 @@ export default function JobDetailsPage() {
     }
 
     fetchJobDetails()
-  }, [isAuthenticated, router, fetchJobDetails])
+    loadAppliedJobs() // Load applied jobs to show status
+  }, [isAuthenticated, router, fetchJobDetails, loadAppliedJobs])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -84,16 +86,8 @@ export default function JobDetailsPage() {
   }
 
   const handleApply = async () => {
-    setApplying(true)
-    try {
-      // Simulate API call for job application
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setApplied(true)
-    } catch (err) {
-      console.error('Application failed:', err)
-    } finally {
-      setApplying(false)
-    }
+    if (!user || !job) return
+    await checkAndApply(job.id, parseInt(user.id))
   }
 
   const handleGoBack = () => {
@@ -268,31 +262,26 @@ export default function JobDetailsPage() {
                   <div className="flex-shrink-0 lg:ml-8">
                     {user?.userType === 'talent' && (
                       <div className="text-center lg:text-right">
-                        {applied ? (
+                        {showSuccess || (job && isJobApplied(job.id)) ? (
                           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <div className="flex items-center justify-center space-x-2 text-green-700 mb-2">
                               <CheckCircle className="w-5 h-5" />
-                              <span className="font-medium">Application Submitted!</span>
+                              <span className="font-medium">
+                                {showSuccess ? 'Application Submitted!' : 'Applied'}
+                              </span>
                             </div>
                             <p className="text-sm text-green-600">
-                              We&apos;ll notify you about next steps
+                              {showSuccess ? "We'll notify you about next steps" : 'You have already applied to this job'}
                             </p>
                           </div>
                         ) : (
                           <Button
                             size="lg"
                             onClick={handleApply}
-                            disabled={applying}
+                            disabled={false}
                             className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
                           >
-                            {applying ? (
-                              <div className="flex items-center space-x-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Applying...</span>
-                              </div>
-                            ) : (
-                              'Apply for This Job'
-                            )}
+                            Apply for This Job
                           </Button>
                         )}
                       </div>
@@ -353,7 +342,7 @@ export default function JobDetailsPage() {
                 </Card>
 
                 {/* Quick Actions */}
-                {user?.userType === 'talent' && !applied && (
+                {user?.userType === 'talent' && !showSuccess && !(job && isJobApplied(job.id)) && (
                   <Card className="shadow-sm bg-blue-50 border-blue-200">
                     <CardContent className="p-4">
                       <h3 className="font-medium text-blue-900 mb-2">Ready to Apply?</h3>
@@ -378,6 +367,7 @@ export default function JobDetailsPage() {
           </div>
         </main>
       </div>
+      <JobApplicationModal />
     </div>
   )
 }

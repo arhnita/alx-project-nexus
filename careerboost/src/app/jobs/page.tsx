@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
+import { useJobApplicationStore } from '@/store/jobApplicationStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
 import { apiService, Job, JobsResponse } from '@/services/api'
 import {
   Search,
@@ -29,6 +31,7 @@ import {
 export default function JobsPage() {
   const { isAuthenticated, user } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
+  const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,7 +83,8 @@ export default function JobsPage() {
     }
 
     fetchJobs()
-  }, [isAuthenticated, router, fetchJobs, currentPage])
+    loadAppliedJobs() // Load applied jobs to show status
+  }, [isAuthenticated, router, fetchJobs, currentPage, loadAppliedJobs])
 
   const handleSearch = async () => {
     setCurrentPage(1)
@@ -425,12 +429,24 @@ export default function JobsPage() {
                               View Details
                             </Button>
                             {user?.userType === 'talent' && (
-                              <Button
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium"
-                              >
-                                Apply
-                              </Button>
+                              isJobApplied(job.id) ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled
+                                  className="px-3 py-2 text-sm font-medium border-green-300 text-green-700 bg-green-50"
+                                >
+                                  Applied
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => checkAndApply(job.id, parseInt(user.id))}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium"
+                                >
+                                  Apply
+                                </Button>
+                              )
                             )}
                           </div>
                         </div>
@@ -502,6 +518,7 @@ export default function JobsPage() {
           </div>
         </main>
       </div>
+      <JobApplicationModal />
     </div>
   )
 }

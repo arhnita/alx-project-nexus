@@ -1,9 +1,12 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { ActivityFeed } from './ActivityFeed'
+import { apiService } from '@/services/api'
 import {
   FileText,
   Eye,
@@ -13,6 +16,26 @@ import {
 
 export function JobSeekerDashboard() {
   const { user } = useAuthStore()
+  const router = useRouter()
+  const [applicationsCount, setApplicationsCount] = useState<number>(0)
+  const [loadingStats, setLoadingStats] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await apiService.getApplicationsCount()
+        setApplicationsCount(response.count)
+      } catch (error) {
+        console.error('Failed to fetch applications count:', error)
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+
+    if (user) {
+      fetchStats()
+    }
+  }, [user])
 
   if (!user || user.userType !== 'talent') return null
 
@@ -38,15 +61,19 @@ export function JobSeekerDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/applications')}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Applications</p>
-                <p className="text-3xl font-bold text-gray-900">23</p>
-                <p className="text-sm text-green-600 flex items-center mt-1">
-                  <TrendingUp className="w-4 h-4 mr-1" />
-                  +2 this week
+                {loadingStats ? (
+                  <div className="h-9 w-12 bg-gray-200 animate-pulse rounded"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">{applicationsCount}</p>
+                )}
+                <p className="text-sm text-blue-600 flex items-center mt-1">
+                  <FileText className="w-4 h-4 mr-1" />
+                  View all applications
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">

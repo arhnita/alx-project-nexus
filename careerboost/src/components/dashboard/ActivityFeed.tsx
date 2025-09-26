@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { apiService, FeedItem, FeedResponse, JobApplicationData } from '@/services/api'
+import { apiService, FeedItem, FeedResponse } from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
+import { useJobApplicationStore } from '@/store/jobApplicationStore'
+import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
 import {
   Briefcase,
   Building2,
@@ -23,6 +25,7 @@ interface ActivityFeedProps {
 
 export function ActivityFeed({ className }: ActivityFeedProps) {
   const { user } = useAuthStore()
+  const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +54,8 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
 
   useEffect(() => {
     fetchFeed()
-  }, [fetchFeed])
+    loadAppliedJobs() // Load applied jobs to show status
+  }, [fetchFeed, loadAppliedJobs])
 
   const handleNextPage = () => {
     if (nextCursor) {
@@ -94,18 +98,10 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
     setApplyingJobs(prev => new Set(prev).add(jobId))
 
     try {
-      const applicationData: JobApplicationData = {
-        job_id: jobId
-      }
-
-      await apiService.applyToJob(applicationData)
-
-      // Show success message or update UI
-      // You could add a toast notification here
-      console.log('Successfully applied to job:', jobId)
+      await checkAndApply(jobId, parseInt(user.id))
+      // Success handling is done in the store
     } catch (err) {
       console.error('Failed to apply to job:', err)
-      // You could show an error toast here
     } finally {
       setApplyingJobs(prev => {
         const newSet = new Set(prev)
@@ -203,24 +199,35 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
                         </div>
                       </div>
                       {user?.userType === 'talent' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleApplyToJob(payload.job!.id)}
-                          disabled={applyingJobs.has(payload.job.id)}
-                          className="flex-shrink-0"
-                        >
-                          {applyingJobs.has(payload.job.id) ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              Applying...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="w-3 h-3 mr-1" />
-                              Apply
-                            </>
-                          )}
-                        </Button>
+                        isJobApplied(payload.job!.id) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled
+                            className="flex-shrink-0 border-green-300 text-green-700 bg-green-50"
+                          >
+                            Applied
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => handleApplyToJob(payload.job!.id)}
+                            disabled={applyingJobs.has(payload.job.id)}
+                            className="flex-shrink-0"
+                          >
+                            {applyingJobs.has(payload.job.id) ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                Applying...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-3 h-3 mr-1" />
+                                Apply
+                              </>
+                            )}
+                          </Button>
+                        )
                       )}
                     </div>
                   </div>
@@ -377,6 +384,9 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
           </>
         )}
       </CardContent>
+
+      {/* Job Application Modal */}
+      <JobApplicationModal />
     </Card>
   )
 }

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useNotificationStore, Notification } from '@/store/notificationStore'
+import { useNotificationStore } from '@/store/notificationStore'
+import { Notification } from '@/services/api'
 import { formatDistanceToNow } from 'date-fns'
 import { Check, CheckCheck, X } from 'lucide-react'
 

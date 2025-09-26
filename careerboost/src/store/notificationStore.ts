@@ -1,24 +1,5 @@
 import { create } from 'zustand'
-
-export interface Notification {
-  id: number
-  title: string
-  message: string
-  is_read: boolean
-  created_at: string
-  notification_type?: string
-}
-
-export interface NotificationResponse {
-  success: boolean
-  message: string
-  data: Notification[]
-  status_code: number
-}
-
-export interface UnreadCountResponse {
-  count: number
-}
+import { apiService, Notification, ApiError } from '@/services/api'
 
 interface NotificationState {
   notifications: Notification[]
@@ -34,35 +15,6 @@ interface NotificationState {
   clearError: () => void
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://connect-hire.onrender.com'
-
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const accessToken = localStorage.getItem('access_token')
-  const url = `${API_BASE_URL}${endpoint}`
-
-  const config: RequestInit = {
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-      ...options.headers,
-    },
-    mode: 'cors',
-    ...options,
-  }
-
-  const response = await fetch(url, config)
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`)
-  }
-
-  return data
-}
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
@@ -74,14 +26,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   fetchNotifications: async () => {
     set({ isLoading: true, error: null })
     try {
-      const response = await apiRequest<NotificationResponse>('/api/notifications/')
+      const response = await apiService.getNotifications()
       set({
         notifications: response.data || [],
         isLoading: false
       })
     } catch (error) {
+      const errorMessage = error instanceof ApiError ? error.message : 'Failed to fetch notifications'
       set({
-        error: error instanceof Error ? error.message : 'Failed to fetch notifications',
+        error: errorMessage,
         isLoading: false
       })
     }
@@ -89,7 +42,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   fetchUnreadCount: async () => {
     try {
-      const response = await apiRequest<UnreadCountResponse>('/api/notifications/unread_count/')
+      const response = await apiService.getUnreadCount()
       set({ unreadCount: response.count || 0 })
     } catch (error) {
       console.error('Failed to fetch unread count:', error)
@@ -98,10 +51,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   markNotificationsAsRead: async (notificationIds: number[]) => {
     try {
-      await apiRequest('/api/notifications/mark-read/', {
-        method: 'POST',
-        body: JSON.stringify({ notification_ids: notificationIds })
-      })
+      await apiService.markNotificationsAsRead(notificationIds)
 
       // Update local state
       const { notifications } = get()
@@ -116,7 +66,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       // Refresh unread count
       get().fetchUnreadCount()
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to mark notifications as read' })
+      const errorMessage = error instanceof ApiError ? error.message : 'Failed to mark notifications as read'
+      set({ error: errorMessage })
     }
   },
 

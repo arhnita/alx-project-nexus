@@ -220,26 +220,47 @@ export interface FileUploadResponse {
 export type FileListResponse = PaginatedResponse<FileUpload>
 
 export interface JobApplicationData {
-  job_id: number
-  cover_letter?: string
-  resume_id?: number
+  job: number
+  user: number
+  cover_letter: string
+}
+
+export interface JobApplication {
+  job: number
+  user: number
+  status: string
+  date_applied: string
+  cover_letter: string
+  updated_at: string
 }
 
 export interface JobApplicationResponse {
   success: boolean
   message: string
-  data: {
-    id: number
-    job: number
-    applicant: number
-    cover_letter?: string
-    resume?: number
-    status: string
-    applied_date: string
-    created_at: string
-    updated_at: string
-  }
+  data: JobApplication
   status_code: number
+}
+
+export type JobApplicationListResponse = PaginatedResponse<JobApplication>
+
+export interface Notification {
+  id: number
+  title: string
+  message: string
+  is_read: boolean
+  created_at: string
+  notification_type?: string
+}
+
+export interface NotificationResponse {
+  success: boolean
+  message: string
+  data: Notification[]
+  status_code: number
+}
+
+export interface UnreadCountResponse {
+  count: number
 }
 
 
@@ -505,40 +526,193 @@ class ApiService {
   async uploadFile(file: File, type: 'resume' | 'cover_letter', userId: number, name?: string): Promise<FileUploadResponse> {
     const accessToken = localStorage.getItem('access_token')
 
-    // Convert file to base64 since file_path might expect base64 content
-    const fileBase64 = await this.fileToBase64(file)
+    // Generate filename with extension
+    const fileName = name || file.name // Keep original name with extension
 
-    const uploadData = {
-      file_path: fileBase64, // Base64 content of the file
-      name: name || file.name.split('.')[0],
-      thumbnail: '', // Optional thumbnail
-      content_type: file.type,
-      object_id: userId,
-      type: type
+    // Generate thumbnail for image and PDF files
+    let thumbnailBlob: Blob | null = null
+    if (file.type.startsWith('image/')) {
+      const thumbnailDataUrl = await this.generateImageThumbnail(file)
+      thumbnailBlob = this.dataUrlToBlob(thumbnailDataUrl)
+    } else if (file.type === 'application/pdf') {
+      const thumbnailDataUrl = await this.generatePDFThumbnail()
+      thumbnailBlob = this.dataUrlToBlob(thumbnailDataUrl)
+    } else {
+      const thumbnailDataUrl = this.generateGenericThumbnail(file.type)
+      thumbnailBlob = this.dataUrlToBlob(thumbnailDataUrl)
     }
 
-    return this.request<FileUploadResponse>('/api/uploads/', {
+    // Use FormData for file upload
+    const formData = new FormData()
+    formData.append('file_path', file) // Binary file
+    formData.append('name', fileName) // Name WITH extension
+    formData.append('type', type)
+    if (thumbnailBlob) {
+      formData.append('thumbnail', thumbnailBlob, 'thumbnail.jpg') // Optional binary thumbnail
+    }
+    // Remove content_type as it expects a model reference, not MIME type
+    formData.append('object_id', userId.toString())
+
+    const url = `${this.baseUrl}/api/uploads/`
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${accessToken}`
+        // Don't set Content-Type for FormData - browser will set it with boundary
       },
-      body: JSON.stringify(uploadData)
+      body: formData
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      // Handle 401 unauthorized errors specifically
+      if (response.status === 401) {
+        // Clear tokens from localStorage
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+
+        throw new ApiError('Session expired. Please log in again.')
+      }
+
+      console.error('Upload API Error:', {
+        status: response.status,
+        url,
+        data,
+        response
+      })
+
+      throw new ApiError(data.message || `HTTP ${response.status}: ${response.statusText}`, data.errors || data.data?.errors)
+    }
+
+    return data
+  }
+
+  private generateImageThumbnail(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+
+      img.onload = () => {
+        // Set thumbnail dimensions (e.g., 150x150)
+        const maxSize = 150
+        let { width, height } = img
+
+        // Calculate new dimensions maintaining aspect ratio
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height
+            height = maxSize
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // Draw the image on canvas
+        ctx?.drawImage(img, 0, 0, width, height)
+
+        // Convert to base64
+        const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        resolve(thumbnailDataUrl)
+      }
+
+      img.onerror = () => {
+        reject(new Error('Failed to generate thumbnail'))
+      }
+
+      // Create object URL for the image
+      img.src = URL.createObjectURL(file)
     })
   }
 
-  private fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => {
-        const result = reader.result as string
-        // Return full data URL (includes data:application/pdf;base64,...)
-        resolve(result)
+  private async generatePDFThumbnail(): Promise<string> {
+    try {
+      // For now, generate a simple PDF icon thumbnail
+      // In production, you'd want to use PDF.js to render the first page
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      canvas.width = 150
+      canvas.height = 150
+
+      if (ctx) {
+        // Draw PDF icon background
+        ctx.fillStyle = '#dc2626'
+        ctx.fillRect(0, 0, 150, 150)
+
+        // Draw PDF text
+        ctx.fillStyle = 'white'
+        ctx.font = 'bold 24px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('PDF', 75, 85)
+
+        // Draw file icon outline
+        ctx.strokeStyle = 'white'
+        ctx.lineWidth = 3
+        ctx.strokeRect(25, 25, 100, 100)
       }
-      reader.onerror = error => reject(error)
-    })
+
+      return canvas.toDataURL('image/jpeg', 0.8)
+    } catch {
+      return this.generateGenericThumbnail('application/pdf')
+    }
   }
+
+  private generateGenericThumbnail(mimeType: string): string {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    canvas.width = 150
+    canvas.height = 150
+
+    if (ctx) {
+      // Draw generic file icon
+      ctx.fillStyle = '#6b7280'
+      ctx.fillRect(0, 0, 150, 150)
+
+      // Draw file extension or type
+      ctx.fillStyle = 'white'
+      ctx.font = 'bold 16px Arial'
+      ctx.textAlign = 'center'
+
+      const extension = mimeType.split('/')[1]?.toUpperCase() || 'FILE'
+      ctx.fillText(extension, 75, 85)
+
+      // Draw file icon outline
+      ctx.strokeStyle = 'white'
+      ctx.lineWidth = 2
+      ctx.strokeRect(25, 25, 100, 100)
+    }
+
+    return canvas.toDataURL('image/jpeg', 0.8)
+  }
+
+  private dataUrlToBlob(dataUrl: string): Blob {
+    const arr = dataUrl.split(',')
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg'
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    return new Blob([u8arr], { type: mime })
+  }
+
+
 
   async getUploadedFiles(type?: 'resume' | 'cover_letter', page?: number, pageSize?: number): Promise<FileListResponse> {
     const accessToken = localStorage.getItem('access_token')
@@ -572,15 +746,118 @@ class ApiService {
     })
   }
 
+  async checkUserFiles(): Promise<{ hasResume: boolean }> {
+    const files = await this.getUploadedFiles()
+
+    const resumeFile = files.results.find(file => file.type === 'resume')
+
+    return {
+      hasResume: !!resumeFile
+    }
+  }
+
   async applyToJob(data: JobApplicationData): Promise<JobApplicationResponse> {
     const accessToken = localStorage.getItem('access_token')
 
-    return this.request<JobApplicationResponse>('/api/jobs/apply/', {
+    const url = `${this.baseUrl}/api/applications/`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify(data)
+    })
+
+    const responseData = await response.json()
+
+    if (!response.ok) {
+      // Handle 401 unauthorized errors specifically
+      if (response.status === 401) {
+        // Clear tokens from localStorage
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+
+        throw new ApiError('Session expired. Please log in again.')
+      }
+
+      console.error('Job Application API Error:', {
+        status: response.status,
+        url,
+        data: responseData,
+        response
+      })
+
+      throw new ApiError(responseData.message || `HTTP ${response.status}: ${response.statusText}`, responseData.errors || responseData.data?.errors)
+    }
+
+    return responseData
+  }
+
+  async getUserApplications(page = 1, pageSize = 10): Promise<JobApplicationListResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/applications/?page=${page}&page_size=${pageSize}`
+
+    return this.request<JobApplicationListResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getApplicationsCount(): Promise<{ count: number }> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/applications/?page=1&page_size=1`
+
+    const response = await this.request<JobApplicationListResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+
+    return { count: response.count }
+  }
+
+  async getNotifications(): Promise<NotificationResponse> {
+    const accessToken = localStorage.getItem('access_token')
+
+    return this.request<NotificationResponse>('/api/notifications/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getUnreadCount(): Promise<UnreadCountResponse> {
+    const accessToken = localStorage.getItem('access_token')
+
+    return this.request<UnreadCountResponse>('/api/notifications/unread_count/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async markNotificationsAsRead(notificationIds: number[]): Promise<{ success: boolean; message: string }> {
+    const accessToken = localStorage.getItem('access_token')
+
+    return this.request<{ success: boolean; message: string }>('/api/notifications/mark-read/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify({ notification_ids: notificationIds })
     })
   }
 }
