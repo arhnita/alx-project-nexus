@@ -100,7 +100,7 @@ export interface Skill {
 export interface UserSkill {
   id: number
   user: number
-  skill: number
+  skill: string
   level?: string
   experience_years?: number
   created_at?: string
@@ -126,8 +126,7 @@ export interface AddMultipleSkillsData {
 }
 
 export interface DeleteSkillData {
-  user: number
-  skill: number
+  skills: number[]
 }
 
 export interface Job {
@@ -220,6 +219,29 @@ export interface FileUploadResponse {
 
 export type FileListResponse = PaginatedResponse<FileUpload>
 
+export interface JobApplicationData {
+  job_id: number
+  cover_letter?: string
+  resume_id?: number
+}
+
+export interface JobApplicationResponse {
+  success: boolean
+  message: string
+  data: {
+    id: number
+    job: number
+    applicant: number
+    cover_letter?: string
+    resume?: number
+    status: string
+    applied_date: string
+    created_at: string
+    updated_at: string
+  }
+  status_code: number
+}
+
 
 class ApiService {
   private baseUrl: string
@@ -263,8 +285,10 @@ class ApiService {
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
 
-          // Dispatch custom event for session expiration
-          window.dispatchEvent(new CustomEvent('sessionExpired'))
+          // Redirect to login page
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login'
+          }
 
           throw new ApiError('Session expired. Please log in again.')
         }
@@ -545,6 +569,18 @@ class ApiService {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
+    })
+  }
+
+  async applyToJob(data: JobApplicationData): Promise<JobApplicationResponse> {
+    const accessToken = localStorage.getItem('access_token')
+
+    return this.request<JobApplicationResponse>('/api/jobs/apply/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify(data)
     })
   }
 }

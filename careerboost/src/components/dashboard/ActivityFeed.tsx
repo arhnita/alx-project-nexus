@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { apiService, FeedItem, FeedResponse } from '@/services/api'
+import { apiService, FeedItem, FeedResponse, JobApplicationData } from '@/services/api'
+import { useAuthStore } from '@/store/authStore'
 import {
   Briefcase,
   Building2,
@@ -12,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  Activity
+  Activity,
+  Send
 } from 'lucide-react'
 
 interface ActivityFeedProps {
@@ -20,12 +22,14 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ className }: ActivityFeedProps) {
+  const { user } = useAuthStore()
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [cursorHistory, setCursorHistory] = useState<string[]>([]) // Store cursor history for navigation
+  const [applyingJobs, setApplyingJobs] = useState<Set<number>>(new Set())
 
   const fetchFeed = useCallback(async (cursor?: string) => {
     try {
@@ -80,6 +84,35 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
     setCurrentPage(1)
     setCursorHistory([])
     fetchFeed()
+  }
+
+  const handleApplyToJob = async (jobId: number) => {
+    if (!user || user.userType !== 'talent') {
+      return
+    }
+
+    setApplyingJobs(prev => new Set(prev).add(jobId))
+
+    try {
+      const applicationData: JobApplicationData = {
+        job_id: jobId
+      }
+
+      await apiService.applyToJob(applicationData)
+
+      // Show success message or update UI
+      // You could add a toast notification here
+      console.log('Successfully applied to job:', jobId)
+    } catch (err) {
+      console.error('Failed to apply to job:', err)
+      // You could show an error toast here
+    } finally {
+      setApplyingJobs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(jobId)
+        return newSet
+      })
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -148,23 +181,47 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
                 </div>
                 {payload.job && (
                   <div className="bg-gray-50 rounded-lg p-3 mt-2">
-                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{payload.job.title}</h4>
-                    <p className="text-sm text-gray-600">{payload.job.company_name}</p>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-gray-500 mt-1">
-                      {payload.job.location && (
-                        <span>
-                          {typeof payload.job.location === 'string'
-                            ? payload.job.location
-                            : typeof payload.job.location === 'object' && payload.job.location !== null
-                              ? `${(payload.job.location as { city: string; state: string }).city}, ${(payload.job.location as { city: string; state: string }).state}`
-                              : ''
-                          }
-                        </span>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{payload.job.title}</h4>
+                        <p className="text-sm text-gray-600">{payload.job.company_name}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-gray-500 mt-1">
+                          {payload.job.location && (
+                            <span>
+                              {typeof payload.job.location === 'string'
+                                ? payload.job.location
+                                : typeof payload.job.location === 'object' && payload.job.location !== null
+                                  ? `${(payload.job.location as { city: string; state: string }).city}, ${(payload.job.location as { city: string; state: string }).state}`
+                                  : ''
+                              }
+                            </span>
+                          )}
+                          {payload.job.salary_range && payload.job.location && (
+                            <span className="hidden sm:inline">•</span>
+                          )}
+                          {payload.job.salary_range && <span>{payload.job.salary_range}</span>}
+                        </div>
+                      </div>
+                      {user?.userType === 'talent' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleApplyToJob(payload.job!.id)}
+                          disabled={applyingJobs.has(payload.job.id)}
+                          className="flex-shrink-0"
+                        >
+                          {applyingJobs.has(payload.job.id) ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                              Applying...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-3 h-3 mr-1" />
+                              Apply
+                            </>
+                          )}
+                        </Button>
                       )}
-                      {payload.job.salary_range && payload.job.location && (
-                        <span className="hidden sm:inline">•</span>
-                      )}
-                      {payload.job.salary_range && <span>{payload.job.salary_range}</span>}
                     </div>
                   </div>
                 )}

@@ -144,7 +144,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const data: DeleteSkillData = { user: userId, skill: skillId }
+      const data: DeleteSkillData = { skills: [skillId] }
       await apiService.deleteUserSkill(data)
 
       // Refresh user skills after deleting

@@ -157,7 +157,7 @@ export default function SkillsPage() {
 
   // Filter out skills that user already has
   const availableSkills = filteredSkills.filter(skill =>
-    !userSkills.some(userSkill => userSkill.skill === skill.id)
+    !userSkills.some(userSkill => userSkill.skill === skill.name)
   )
 
   if (isLoading) {
@@ -239,7 +239,7 @@ export default function SkillsPage() {
               ) : (
                 userSkills.map((userSkill) => {
                   // Find the skill details from the skills array
-                  const skillDetails = skills.find(s => s.id === userSkill.skill)
+                  const skillDetails = skills.find(s => s.name === userSkill.skill)
 
                   return (
                     <Card key={userSkill.id}>
@@ -247,7 +247,7 @@ export default function SkillsPage() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">
-                              {skillDetails?.name || `Skill ID: ${userSkill.skill}`}
+                              {userSkill.skill}
                             </h3>
                             {skillDetails?.category && (
                               <p className="text-sm text-gray-600">{skillDetails.category}</p>
@@ -262,8 +262,8 @@ export default function SkillsPage() {
                             <button
                               onClick={() => handleDeleteClick(
                                 parseInt(user?.id || '0'),
-                                userSkill.skill,
-                                skillDetails?.name || `Skill ID: ${userSkill.skill}`
+                                skillDetails?.id || 0,
+                                userSkill.skill
                               )}
                               className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
                               title="Delete skill"
