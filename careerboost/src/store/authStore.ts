@@ -8,6 +8,7 @@ interface AuthState {
   user: (JobSeeker | Recruiter) | null
   isAuthenticated: boolean
   isLoading: boolean
+  isInitialized: boolean
   error: string | null
   login: (user: JobSeeker | Recruiter) => void
   loginWithAPI: (data: LoginData) => Promise<void>
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      isInitialized: false,
       error: null,
 
       login: (user) => {
@@ -231,34 +233,49 @@ export const useAuthStore = create<AuthState>()(
       },
 
       restoreSession: async () => {
+        console.log('RestoreSession: Starting...')
         set({ isLoading: true })
 
         const accessToken = localStorage.getItem('access_token')
         const refreshToken = localStorage.getItem('refresh_token')
+        console.log('RestoreSession: Tokens ->', {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken
+        })
 
         // If no tokens, clear any persisted auth state
         if (!accessToken && !refreshToken) {
-          set({ user: null, isAuthenticated: false, error: null, isLoading: false })
+          console.log('RestoreSession: No tokens found, clearing state')
+          set({ user: null, isAuthenticated: false, error: null, isLoading: false, isInitialized: true })
           return
         }
 
         // If we have persisted user but no tokens, logout
         const state = get()
+        console.log('RestoreSession: Current state ->', {
+          isAuthenticated: state.isAuthenticated,
+          hasUser: !!state.user
+        })
+
         if (state.isAuthenticated && !accessToken) {
-          set({ user: null, isAuthenticated: false, error: null, isLoading: false })
+          console.log('RestoreSession: Have authenticated state but no access token, clearing')
+          set({ user: null, isAuthenticated: false, error: null, isLoading: false, isInitialized: true })
           return
         }
 
         // If we have access token, validate it by fetching profile
         if (accessToken) {
+          console.log('RestoreSession: Have access token, validating with API...')
           try {
             const profileResponse = await apiService.getUserProfile()
             console.log('Session validation successful!', profileResponse)
 
             // If we have persisted state and it matches, keep it
             if (state.isAuthenticated && state.user) {
-              set({ isLoading: false })
+              console.log('RestoreSession: Have persisted state, keeping it')
+              set({ isLoading: false, isInitialized: true })
             } else {
+              console.log('RestoreSession: No persisted state, reconstructing user from API')
               // We have valid tokens but no persisted state, reconstruct user from profile
               const userData = profileResponse.data
               let user: JobSeeker | Recruiter
@@ -299,10 +316,12 @@ export const useAuthStore = create<AuthState>()(
                 } satisfies Recruiter
               }
 
+              console.log('RestoreSession: Setting reconstructed user', { userType: user.userType, id: user.id })
               set({
                 user,
                 isAuthenticated: true,
                 isLoading: false,
+                isInitialized: true,
                 error: null
               })
             }
@@ -311,14 +330,14 @@ export const useAuthStore = create<AuthState>()(
             console.error('Session validation failed:', error)
             localStorage.removeItem('access_token')
             localStorage.removeItem('refresh_token')
-            set({ user: null, isAuthenticated: false, isLoading: false, error: null })
+            set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true, error: null })
           }
         } else {
           // No access token but have refresh token, clear everything
           if (refreshToken) {
             localStorage.removeItem('refresh_token')
           }
-          set({ user: null, isAuthenticated: false, error: null, isLoading: false })
+          set({ user: null, isAuthenticated: false, error: null, isLoading: false, isInitialized: true })
         }
       }
     }),

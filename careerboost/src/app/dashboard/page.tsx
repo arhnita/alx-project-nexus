@@ -11,18 +11,20 @@ import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, isLoading } = useAuthStore()
+  const { user, isAuthenticated, isLoading, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
 
   useEffect(() => {
-    // Only redirect if not loading and not authenticated
-    if (!isLoading && !isAuthenticated) {
+    console.log('Dashboard: Auth state ->', { isLoading, isAuthenticated, isInitialized, user: !!user })
+    // Only redirect if auth is initialized and not authenticated
+    if (isInitialized && !isAuthenticated) {
+      console.log('Dashboard: Redirecting to login - not authenticated')
       router.push('/login')
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, isInitialized, router, user])
 
-  if (!user) {
+  if (!isInitialized || isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>

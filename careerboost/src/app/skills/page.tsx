@@ -14,7 +14,7 @@ import { Skill } from '@/services/api'
 import { Plus, X, Search, Award, TrendingUp, CheckCircle, Trash2 } from 'lucide-react'
 
 export default function SkillsPage() {
-  const { isAuthenticated, logout, user, isLoading: authLoading } = useAuthStore()
+  const { isAuthenticated, logout, user, isLoading: authLoading, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const {
     skills,
@@ -48,7 +48,7 @@ export default function SkillsPage() {
   }, [fetchUserSkills, fetchAllSkills])
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (isInitialized && !isAuthenticated) {
       router.push('/login')
       return
     }
@@ -64,7 +64,7 @@ export default function SkillsPage() {
 
     window.addEventListener('sessionExpired', handleSessionExpired)
     return () => window.removeEventListener('sessionExpired', handleSessionExpired)
-  }, [authLoading, isAuthenticated, router, logout, fetchData])
+  }, [isInitialized, isAuthenticated, router, logout, fetchData])
 
   const handleSearch = (term: string) => {
     setSearchTerm(term)

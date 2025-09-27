@@ -12,6 +12,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // Restore session on app load
+    console.log('AuthProvider: Calling restoreSession...')
     restoreSession()
   }, [restoreSession])
 

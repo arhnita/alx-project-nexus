@@ -26,7 +26,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated, user, isLoading: authLoading } = useAuthStore()
+  const { isAuthenticated, user, isLoading: authLoading, isInitialized } = useAuthStore()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -69,14 +69,14 @@ export default function ProfilePage() {
   }, [user])
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (isInitialized && !isAuthenticated) {
       router.push('/login')
       return
     }
 
     fetchProfile()
     fetchDocuments()
-  }, [authLoading, isAuthenticated, router, fetchDocuments])
+  }, [isInitialized, isAuthenticated, router, fetchDocuments])
 
   const handleResumeUpload = (file: FileUpload) => {
     setResumeFile(file)
