@@ -28,7 +28,7 @@ import {
 } from 'lucide-react'
 
 export default function MyJobsPage() {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, isLoading } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
@@ -69,18 +69,20 @@ export default function MyJobsPage() {
   }, [currentPage, pageSize])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login')
       return
     }
 
-    if (user?.userType !== 'recruiter') {
+    if (!isLoading && user?.userType !== 'recruiter') {
       router.push('/dashboard')
       return
     }
 
-    fetchJobs()
-  }, [isAuthenticated, user, router, fetchJobs])
+    if (isAuthenticated && user?.userType === 'recruiter') {
+      fetchJobs()
+    }
+  }, [isLoading, isAuthenticated, user, router, fetchJobs])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

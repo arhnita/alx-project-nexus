@@ -231,29 +231,81 @@ export const useAuthStore = create<AuthState>()(
       },
 
       restoreSession: async () => {
+        set({ isLoading: true })
+
         const accessToken = localStorage.getItem('access_token')
         const refreshToken = localStorage.getItem('refresh_token')
 
         // If no tokens, clear any persisted auth state
         if (!accessToken && !refreshToken) {
-          set({ user: null, isAuthenticated: false, error: null })
+          set({ user: null, isAuthenticated: false, error: null, isLoading: false })
           return
         }
 
         // If we have persisted user but no tokens, logout
         const state = get()
         if (state.isAuthenticated && !accessToken) {
-          set({ user: null, isAuthenticated: false, error: null })
+          set({ user: null, isAuthenticated: false, error: null, isLoading: false })
           return
         }
 
-        // If we have tokens and persisted state, validate by fetching profile
-        if (accessToken && state.isAuthenticated && state.user) {
+        // If we have access token, validate it by fetching profile
+        if (accessToken) {
           try {
-            set({ isLoading: true })
-            await apiService.getUserProfile()
-            // Profile fetch succeeded, session is valid
-            set({ isLoading: false })
+            const profileResponse = await apiService.getUserProfile()
+            console.log('Session validation successful!', profileResponse)
+
+            // If we have persisted state and it matches, keep it
+            if (state.isAuthenticated && state.user) {
+              set({ isLoading: false })
+            } else {
+              // We have valid tokens but no persisted state, reconstruct user from profile
+              const userData = profileResponse.data
+              let user: JobSeeker | Recruiter
+
+              if (userData.role === 'talent') {
+                user = {
+                  id: userData.id.toString(),
+                  email: userData.email,
+                  firstName: userData.first_name,
+                  lastName: userData.last_name,
+                  userType: 'talent' as const,
+                  avatar: undefined,
+                  createdAt: new Date(userData.created_at),
+                  skills: [],
+                  experience: 0,
+                  location: '',
+                  skillScore: 0,
+                  profileViews: 0,
+                  profileViewsGrowth: 0,
+                  applications: [],
+                  interviews: []
+                } satisfies JobSeeker
+              } else {
+                user = {
+                  id: userData.id.toString(),
+                  email: userData.email,
+                  firstName: userData.first_name,
+                  lastName: userData.last_name,
+                  userType: 'recruiter' as const,
+                  avatar: undefined,
+                  createdAt: new Date(userData.created_at),
+                  company: '',
+                  position: '',
+                  location: '',
+                  jobPostings: [],
+                  hiresPerMonth: 0,
+                  hiresGoal: 0
+                } satisfies Recruiter
+              }
+
+              set({
+                user,
+                isAuthenticated: true,
+                isLoading: false,
+                error: null
+              })
+            }
           } catch (error) {
             // Profile fetch failed, tokens are invalid
             console.error('Session validation failed:', error)
@@ -261,6 +313,12 @@ export const useAuthStore = create<AuthState>()(
             localStorage.removeItem('refresh_token')
             set({ user: null, isAuthenticated: false, isLoading: false, error: null })
           }
+        } else {
+          // No access token but have refresh token, clear everything
+          if (refreshToken) {
+            localStorage.removeItem('refresh_token')
+          }
+          set({ user: null, isAuthenticated: false, error: null, isLoading: false })
         }
       }
     }),

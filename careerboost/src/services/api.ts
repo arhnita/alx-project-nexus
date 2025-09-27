@@ -316,6 +316,37 @@ export interface UnreadCountResponse {
   count: number
 }
 
+// Address lookup interfaces
+export interface Country {
+  id: number
+  name: string
+  code: string
+}
+
+export interface State {
+  id: number
+  name: string
+  country_id: number
+}
+
+export interface City {
+  id: number
+  name: string
+  state_id: number
+}
+
+export interface CountriesResponse {
+  results: Country[]
+}
+
+export interface StatesResponse {
+  results: State[]
+}
+
+export interface CitiesResponse {
+  results: City[]
+}
+
 
 class ApiService {
   private baseUrl: string
@@ -989,6 +1020,37 @@ class ApiService {
         'Authorization': `Bearer ${accessToken}`
       },
       body: JSON.stringify({ notification_ids: notificationIds })
+    })
+  }
+
+  // Address lookup methods
+  async getCountries(): Promise<Country[]> {
+    const accessToken = localStorage.getItem('access_token')
+    return this.request<Country[]>('/api/addresses/lookup/countries/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getStates(countryId: number): Promise<State[]> {
+    const accessToken = localStorage.getItem('access_token')
+    return this.request<State[]>(`/api/addresses/lookup/states/?country_id=${countryId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getCities(stateId: number): Promise<City[]> {
+    const accessToken = localStorage.getItem('access_token')
+    return this.request<City[]>(`/api/addresses/lookup/cities/?state_id=${stateId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
     })
   }
 }

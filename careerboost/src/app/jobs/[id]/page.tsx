@@ -25,7 +25,7 @@ import {
 
 export default function JobDetailsPage() {
   const { id } = useParams()
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, isLoading: authLoading } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const { checkAndApply, showSuccess, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const router = useRouter()
@@ -55,14 +55,14 @@ export default function JobDetailsPage() {
   }, [id])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push('/login')
       return
     }
 
     fetchJobDetails()
     loadAppliedJobs() // Load applied jobs to show status
-  }, [isAuthenticated, router, fetchJobDetails, loadAppliedJobs])
+  }, [authLoading, isAuthenticated, router, fetchJobDetails, loadAppliedJobs])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

@@ -1,16 +1,16 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
 import { cn } from '@/lib/utils'
+import { apiService } from '@/services/api'
 import {
   LayoutDashboard,
   Search,
   FileText,
-  Users,
-  BarChart3,
   Settings,
   Briefcase,
   Building2,
@@ -29,9 +29,30 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
   const { user } = useAuthStore()
   const { isSidebarCollapsed, toggleSidebar } = useUIStore()
   const pathname = usePathname()
+  const [applicationsCount, setApplicationsCount] = useState<number>(0)
+  const [jobsCount, setJobsCount] = useState<number>(0)
 
   const isJobSeeker = user?.userType === 'talent'
   const isRecruiter = user?.userType === 'recruiter'
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user && user.userType === 'recruiter') {
+        try {
+          const [jobsResponse, applicationsResponse] = await Promise.all([
+            apiService.getRecruiterJobs(1, 1),
+            apiService.getUserApplications(1, 1)
+          ])
+          setJobsCount(jobsResponse.count)
+          setApplicationsCount(applicationsResponse.count)
+        } catch (error) {
+          console.error('Failed to fetch sidebar stats:', error)
+        }
+      }
+    }
+
+    fetchStats()
+  }, [user])
 
   const jobSeekerNavItems = [
     {
@@ -68,19 +89,9 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
       icon: Briefcase
     },
     {
-      title: 'Candidates',
-      href: '/candidates',
-      icon: Users
-    },
-    {
       title: 'Applications',
       href: '/applications',
       icon: FileText
-    },
-    {
-      title: 'Analytics',
-      href: '/analytics',
-      icon: BarChart3
     },
     {
       title: 'Company',
@@ -216,11 +227,11 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Active Jobs</span>
-                    <span className="text-xs font-medium text-gray-900">12</span>
+                    <span className="text-xs font-medium text-gray-900">{jobsCount}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Applications</span>
-                    <span className="text-xs font-medium text-gray-900">284</span>
+                    <span className="text-xs font-medium text-gray-900">{applicationsCount}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">This Month</span>

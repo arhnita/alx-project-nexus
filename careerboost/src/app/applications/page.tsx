@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 
 export default function ApplicationsPage() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isLoading } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
   const [applications, setApplications] = useState<JobApplication[]>([])
@@ -79,13 +79,15 @@ export default function ApplicationsPage() {
   }, [currentPage, pageSize])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login')
       return
     }
 
-    fetchApplications()
-  }, [isAuthenticated, router, fetchApplications])
+    if (isAuthenticated) {
+      fetchApplications()
+    }
+  }, [isLoading, isAuthenticated, router, fetchApplications])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

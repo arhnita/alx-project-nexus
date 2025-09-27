@@ -81,14 +81,8 @@ export function Header() {
                 )}
                 {isRecruiter && (
                   <>
-                    <Link href="/candidates" className="text-gray-700 hover:text-blue-600 font-medium">
-                      Candidates
-                    </Link>
                     <Link href="/my-jobs" className="text-gray-700 hover:text-blue-600 font-medium">
                       My Jobs
-                    </Link>
-                    <Link href="/analytics" className="text-gray-700 hover:text-blue-600 font-medium">
-                      Analytics
                     </Link>
                   </>
                 )}
@@ -257,13 +251,6 @@ export function Header() {
                   )}
                   {isRecruiter && (
                     <>
-                      <Link
-                        href="/candidates"
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Candidates
-                      </Link>
                       <Link
                         href="/my-jobs"
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"

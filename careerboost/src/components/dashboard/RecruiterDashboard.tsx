@@ -27,15 +27,20 @@ export function RecruiterDashboard() {
   const { user } = useAuthStore()
   const router = useRouter()
   const [jobsCount, setJobsCount] = useState<number>(0)
+  const [applicationsCount, setApplicationsCount] = useState<number>(0)
   const [loadingStats, setLoadingStats] = useState(true)
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await apiService.getRecruiterJobs(1, 1) // Get first page to get count
-        setJobsCount(response.count)
+        const [jobsResponse, applicationsResponse] = await Promise.all([
+          apiService.getRecruiterJobs(1, 1), // Get first page to get count
+          apiService.getUserApplications(1, 1) // Get first page to get count
+        ])
+        setJobsCount(jobsResponse.count)
+        setApplicationsCount(applicationsResponse.count)
       } catch (error) {
-        console.error('Failed to fetch jobs count:', error)
+        console.error('Failed to fetch stats:', error)
       } finally {
         setLoadingStats(false)
       }
@@ -160,12 +165,9 @@ export function RecruiterDashboard() {
           You have 3 interviews today and 52 new applications this week.
         </p>
         <div className="flex gap-3">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => router.push('/my-jobs')}>
             <Plus className="w-4 h-4 mr-2" />
             Post New Job
-          </Button>
-          <Button variant="outline" size="sm" className="border-purple-400 text-purple-100 hover:bg-purple-600">
-            View Analytics
           </Button>
         </div>
       </div>
@@ -199,7 +201,7 @@ export function RecruiterDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Applications</p>
-                <p className="text-3xl font-bold text-gray-900">284</p>
+                <p className="text-3xl font-bold text-gray-900">{loadingStats ? '...' : applicationsCount}</p>
                 <p className="text-sm text-green-600 flex items-center mt-1">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   +52 this week
@@ -420,16 +422,6 @@ export function RecruiterDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6 text-center">
-            <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900 mb-2">View Analytics</h3>
-            <p className="text-sm text-gray-600 mb-4">Track your hiring performance</p>
-            <Button variant="outline" size="sm" className="border-purple-300 text-purple-700">
-              View Reports
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

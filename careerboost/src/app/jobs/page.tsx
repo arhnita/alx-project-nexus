@@ -29,7 +29,7 @@ import {
 } from 'lucide-react'
 
 export default function JobsPage() {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, isLoading: authLoading } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const router = useRouter()
@@ -77,14 +77,16 @@ export default function JobsPage() {
   }, [currentPage, pageSize])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push('/login')
       return
     }
 
-    fetchJobs()
-    loadAppliedJobs() // Load applied jobs to show status
-  }, [isAuthenticated, router, fetchJobs, currentPage, loadAppliedJobs])
+    if (isAuthenticated) {
+      fetchJobs()
+      loadAppliedJobs() // Load applied jobs to show status
+    }
+  }, [authLoading, isAuthenticated, router, fetchJobs, currentPage, loadAppliedJobs])
 
   const handleSearch = async () => {
     setCurrentPage(1)

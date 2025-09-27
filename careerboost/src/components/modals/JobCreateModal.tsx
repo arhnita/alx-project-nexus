@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { apiService, JobCreateData, ApiError, Company } from '@/services/api'
+import { apiService, JobCreateData, ApiError, Company, Country, State, City } from '@/services/api'
 import { Building2, DollarSign, MapPin, FileText, X, ChevronDown } from 'lucide-react'
 
 interface JobCreateModalProps {
@@ -25,6 +25,13 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
   })
   const [companies, setCompanies] = useState<Company[]>([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
+  const [countries, setCountries] = useState<Country[]>([])
+  const [states, setStates] = useState<State[]>([])
+  const [cities, setCities] = useState<City[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<number | null>(null)
+  const [selectedState, setSelectedState] = useState<number | null>(null)
+  const [loadingStates, setLoadingStates] = useState(false)
+  const [loadingCities, setLoadingCities] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -32,8 +39,25 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
   useEffect(() => {
     if (isOpen) {
       fetchCompanies()
+      fetchCountries()
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (selectedCountry) {
+      fetchStates(selectedCountry)
+      setSelectedState(null)
+      setCities([])
+      setFormData(prev => ({ ...prev, city: 0 }))
+    }
+  }, [selectedCountry])
+
+  useEffect(() => {
+    if (selectedState) {
+      fetchCities(selectedState)
+      setFormData(prev => ({ ...prev, city: 0 }))
+    }
+  }, [selectedState])
 
   const fetchCompanies = async () => {
     try {
@@ -45,6 +69,41 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
       setError('Failed to load companies')
     } finally {
       setLoadingCompanies(false)
+    }
+  }
+
+  const fetchCountries = async () => {
+    try {
+      const countriesData = await apiService.getCountries()
+      setCountries(countriesData)
+    } catch (err) {
+      console.error('Failed to fetch countries:', err)
+    }
+  }
+
+  const fetchStates = async (countryId: number) => {
+    try {
+      setLoadingStates(true)
+      const statesData = await apiService.getStates(countryId)
+      setStates(statesData)
+    } catch (err) {
+      console.error('Failed to fetch states:', err)
+      setStates([])
+    } finally {
+      setLoadingStates(false)
+    }
+  }
+
+  const fetchCities = async (stateId: number) => {
+    try {
+      setLoadingCities(true)
+      const citiesData = await apiService.getCities(stateId)
+      setCities(citiesData)
+    } catch (err) {
+      console.error('Failed to fetch cities:', err)
+      setCities([])
+    } finally {
+      setLoadingCities(false)
     }
   }
 
@@ -71,6 +130,10 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
     }
     if (!formData.physical_address.trim()) {
       setError('Physical address is required')
+      return false
+    }
+    if (!formData.city || formData.city === 0) {
+      setError('Please select a city')
       return false
     }
     if (!formData.salary_min || !formData.salary_max) {
@@ -142,6 +205,11 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
       salary_min: '',
       salary_max: ''
     })
+    // Reset address selection
+    setSelectedCountry(null)
+    setSelectedState(null)
+    setStates([])
+    setCities([])
   }
 
   if (!isOpen) return null
@@ -243,6 +311,85 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
               <p className="text-xs text-gray-500 mt-1">
                 {formData.description.length} characters
               </p>
+            </div>
+
+            {/* Location Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Country */}
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+                  Country *
+                </label>
+                <div className="relative">
+                  <select
+                    id="country"
+                    value={selectedCountry || ''}
+                    onChange={(e) => setSelectedCountry(Number(e.target.value) || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white text-black"
+                    disabled={isLoading}
+                  >
+                    <option value="">Select Country</option>
+                    {countries.map((country) => (
+                      <option key={country.id} value={country.id}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* State */}
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                  State/Province *
+                </label>
+                <div className="relative">
+                  <select
+                    id="state"
+                    value={selectedState || ''}
+                    onChange={(e) => setSelectedState(Number(e.target.value) || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white text-black"
+                    disabled={isLoading || loadingStates || !selectedCountry}
+                  >
+                    <option value="">
+                      {loadingStates ? 'Loading...' : selectedCountry ? 'Select State' : 'Select Country First'}
+                    </option>
+                    {states.map((state) => (
+                      <option key={state.id} value={state.id}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* City */}
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <div className="relative">
+                  <select
+                    id="city"
+                    value={formData.city || ''}
+                    onChange={(e) => handleInputChange('city', Number(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white text-black"
+                    disabled={isLoading || loadingCities || !selectedState}
+                  >
+                    <option value="">
+                      {loadingCities ? 'Loading...' : selectedState ? 'Select City' : 'Select State First'}
+                    </option>
+                    {cities.map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                </div>
+              </div>
             </div>
 
             {/* Physical Address */}

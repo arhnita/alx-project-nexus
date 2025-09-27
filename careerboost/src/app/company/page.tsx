@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 
 export default function CompanyPage() {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, isLoading } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
   const [companies, setCompanies] = useState<Company[]>([])
@@ -69,18 +69,20 @@ export default function CompanyPage() {
   }, [currentPage, pageSize])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login')
       return
     }
 
-    if (user?.userType !== 'recruiter') {
+    if (!isLoading && user?.userType !== 'recruiter') {
       router.push('/dashboard')
       return
     }
 
-    fetchCompanies()
-  }, [isAuthenticated, user, router, fetchCompanies])
+    if (isAuthenticated && user?.userType === 'recruiter') {
+      fetchCompanies()
+    }
+  }, [isLoading, isAuthenticated, user, router, fetchCompanies])
 
   const handleDeleteCompany = async (company: Company) => {
     try {

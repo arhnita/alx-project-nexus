@@ -11,15 +11,16 @@ import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, isLoading } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Only redirect if not loading and not authenticated
+    if (!isLoading && !isAuthenticated) {
       router.push('/login')
     }
-  }, [isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router])
 
   if (!user) {
     return (
