@@ -136,7 +136,7 @@ export interface Job {
   company: number
   company_name: string
   company_description: string
-  physical_address: {
+  physical_address: string | {
     city: string
     state: string
     street: string
@@ -153,6 +153,7 @@ export interface Job {
   categories: string[]
   is_promoted: boolean
   promotion_priority: number
+  skills: Skill[]
 }
 
 export interface PaginatedResponse<T> {
@@ -251,6 +252,7 @@ export interface JobCreateData {
   city: number
   salary_min: string
   salary_max: string
+  skills: number[]
 }
 
 export interface JobCreateResponse {
@@ -486,7 +488,7 @@ class ApiService {
 
   async getAllSkills(page?: number): Promise<SkillsResponse> {
     const accessToken = localStorage.getItem('access_token')
-    let url = '/api/skills/'
+    let url = '/api/skills/skill/'
 
     if (page) {
       url += `?page=${page}`

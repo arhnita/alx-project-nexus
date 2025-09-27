@@ -14,7 +14,7 @@ import { Skill } from '@/services/api'
 import { Plus, X, Search, Award, TrendingUp, CheckCircle, Trash2 } from 'lucide-react'
 
 export default function SkillsPage() {
-  const { isAuthenticated, logout, user, isLoading: authLoading, isInitialized } = useAuthStore()
+  const { isAuthenticated, logout, user, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const {
     skills,

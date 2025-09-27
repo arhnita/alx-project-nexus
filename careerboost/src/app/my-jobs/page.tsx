@@ -28,7 +28,7 @@ import {
 } from 'lucide-react'
 
 export default function MyJobsPage() {
-  const { isAuthenticated, user, isLoading, isInitialized } = useAuthStore()
+  const { isAuthenticated, user, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
@@ -315,8 +315,16 @@ export default function MyJobsPage() {
                         <div className="space-y-2 mb-4">
                           <div className="flex items-center gap-1 text-sm text-gray-600">
                             <MapPin className="w-4 h-4" />
-                            <span>{`${job.physical_address.city}, ${job.physical_address.state}`}</span>
-                            {job.physical_address.country !== 'United States' && (
+                            <span>
+                              {typeof job.physical_address === 'string' ? (
+                                job.city_name || job.physical_address
+                              ) : job.physical_address.city && job.physical_address.state ? (
+                                `${job.physical_address.city}, ${job.physical_address.state}`
+                              ) : (
+                                job.city_name || 'Location not specified'
+                              )}
+                            </span>
+                            {typeof job.physical_address === 'object' && job.physical_address.country !== 'United States' && (
                               <span className="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                                 {job.physical_address.country}
                               </span>

@@ -13,7 +13,6 @@ import {
   Menu,
   X,
   User,
-  Settings,
   LogOut,
   ChevronDown,
   Award
@@ -48,14 +47,13 @@ export function Header() {
   }
 
   const isJobSeeker = user?.userType === 'talent'
-  const isRecruiter = user?.userType === 'recruiter'
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
               <span className="text-white font-bold text-lg">C</span>
             </div>
@@ -64,41 +62,10 @@ export function Header() {
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center space-x-8">
-            {isAuthenticated ? (
-              <>
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Dashboard
-                </Link>
-                {isJobSeeker && (
-                  <>
-                    <Link href="/jobs" className="text-gray-700 hover:text-blue-600 font-medium">
-                      Jobs
-                    </Link>
-                    <Link href="/applications" className="text-gray-700 hover:text-blue-600 font-medium">
-                      Applications
-                    </Link>
-                  </>
-                )}
-                {isRecruiter && (
-                  <>
-                    <Link href="/my-jobs" className="text-gray-700 hover:text-blue-600 font-medium">
-                      My Jobs
-                    </Link>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <Link href="/jobs" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Find Jobs
-                </Link>
-                <Link href="/companies" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Companies
-                </Link>
-                <Link href="/resources" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Resources
-                </Link>
-              </>
+            {isAuthenticated && (
+              <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+                Dashboard
+              </Link>
             )}
           </nav>
 
@@ -173,14 +140,6 @@ export function Header() {
                           Skills
                         </Link>
                       )}
-                      <Link
-                        href="/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <Settings className="w-4 h-4 mr-3" />
-                        Settings
-                      </Link>
                       <hr className="my-1" />
                       <button
                         onClick={handleLogout}
@@ -209,76 +168,28 @@ export function Header() {
             )}
 
             {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
+        {isMenuOpen && isAuthenticated && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="space-y-2">
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  {isJobSeeker && (
-                    <>
-                      <Link
-                        href="/jobs"
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Jobs
-                      </Link>
-                      <Link
-                        href="/applications"
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Applications
-                      </Link>
-                    </>
-                  )}
-                  {isRecruiter && (
-                    <>
-                      <Link
-                        href="/my-jobs"
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        My Jobs
-                      </Link>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/jobs"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Find Jobs
-                  </Link>
-                  <Link
-                    href="/companies"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Companies
-                  </Link>
-                </>
-              )}
+              <Link
+                href="/dashboard"
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
             </nav>
           </div>
         )}

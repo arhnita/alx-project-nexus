@@ -26,7 +26,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated, user, isLoading: authLoading, isInitialized } = useAuthStore()
+  const { isAuthenticated, user, isInitialized } = useAuthStore()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)

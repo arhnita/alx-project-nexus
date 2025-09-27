@@ -44,7 +44,7 @@ export function Modal({ isOpen, onClose, title, children, className = '' }: Moda
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-start sm:items-center justify-center p-4 pt-10 sm:pt-4">
         {/* Backdrop */}
         <div
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -52,10 +52,10 @@ export function Modal({ isOpen, onClose, title, children, className = '' }: Moda
         />
 
         {/* Modal */}
-        <div className={`relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white p-6 shadow-xl transition-all ${className}`}>
+        <div className={`relative w-full max-w-lg transform rounded-lg bg-white shadow-xl transition-all max-h-[90vh] flex flex-col ${className}`}>
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between p-6 pb-0">
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
               <button
                 onClick={onClose}
@@ -67,7 +67,7 @@ export function Modal({ isOpen, onClose, title, children, className = '' }: Moda
           )}
 
           {/* Content */}
-          <div>{children}</div>
+          <div className="overflow-y-auto flex-1 p-6">{children}</div>
         </div>
       </div>
     </div>

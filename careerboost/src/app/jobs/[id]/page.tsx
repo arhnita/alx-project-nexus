@@ -25,7 +25,7 @@ import {
 
 export default function JobDetailsPage() {
   const { id } = useParams()
-  const { isAuthenticated, user, isLoading: authLoading, isInitialized } = useAuthStore()
+  const { isAuthenticated, user, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const { checkAndApply, showSuccess, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const router = useRouter()
@@ -216,8 +216,16 @@ export default function JobDetailsPage() {
                       <div className="flex items-center space-x-2 text-gray-600">
                         <MapPin className="w-5 h-5" />
                         <div>
-                          <p className="text-sm">{`${job.physical_address.city}, ${job.physical_address.state}`}</p>
-                          {job.physical_address.country !== 'United States' && (
+                          <p className="text-sm">
+                            {typeof job.physical_address === 'string' ? (
+                              job.city_name || job.physical_address
+                            ) : job.physical_address.city && job.physical_address.state ? (
+                              `${job.physical_address.city}, ${job.physical_address.state}`
+                            ) : (
+                              job.city_name || 'Location not specified'
+                            )}
+                          </p>
+                          {typeof job.physical_address === 'object' && job.physical_address.country !== 'United States' && (
                             <p className="text-xs text-blue-600 font-medium">
                               {job.physical_address.country}
                             </p>
@@ -309,6 +317,30 @@ export default function JobDetailsPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Required Skills */}
+                {job.skills && job.skills.length > 0 && (
+                  <Card className="shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Star className="w-5 h-5" />
+                        <span>Required Skills</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {job.skills.map((skill) => (
+                          <span
+                            key={skill.id}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                          >
+                            {skill.name}
+                          </span>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Company Info */}
@@ -332,9 +364,20 @@ export default function JobDetailsPage() {
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         <MapPin className="w-4 h-4" />
                         <span>
-                          {job.physical_address.street}<br />
-                          {job.physical_address.city}, {job.physical_address.state} {job.physical_address.zip_code}<br />
-                          {job.physical_address.country}
+                          {typeof job.physical_address === 'string' ? (
+                            // Handle string format
+                            <>
+                              {job.physical_address}<br />
+                              {job.city_name}
+                            </>
+                          ) : (
+                            // Handle object format
+                            <>
+                              {job.physical_address.street}<br />
+                              {job.physical_address.city}, {job.physical_address.state} {job.physical_address.zip_code}<br />
+                              {job.physical_address.country}
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>

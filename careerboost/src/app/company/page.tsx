@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 
 export default function CompanyPage() {
-  const { isAuthenticated, user, isLoading, isInitialized } = useAuthStore()
+  const { isAuthenticated, user, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const router = useRouter()
   const [companies, setCompanies] = useState<Company[]>([])

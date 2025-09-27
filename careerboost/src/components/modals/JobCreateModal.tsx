@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { apiService, JobCreateData, ApiError, Company, Country, State, City } from '@/services/api'
+import { apiService, JobCreateData, ApiError, Company, Country, State, City, Skill } from '@/services/api'
+import { useSkillsStore } from '@/store/skillsStore'
 import { Building2, DollarSign, MapPin, FileText, X, ChevronDown } from 'lucide-react'
 
 interface JobCreateModalProps {
@@ -21,7 +22,8 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
     physical_address: '',
     city: 0, // Will need to be set based on city selection
     salary_min: '',
-    salary_max: ''
+    salary_max: '',
+    skills: []
   })
   const [companies, setCompanies] = useState<Company[]>([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
@@ -35,13 +37,33 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [availableSkills, setAvailableSkills] = useState<Skill[]>([])
+  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([])
+  const [skillSearchTerm, setSkillSearchTerm] = useState('')
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false)
+  const { fetchAllSkills, skills } = useSkillsStore()
+
+  const fetchSkills = useCallback(async () => {
+    try {
+      await fetchAllSkills()
+    } catch (err) {
+      console.error('Failed to fetch skills:', err)
+    }
+  }, [fetchAllSkills])
+
+  // Update available skills when skills from store change
+  useEffect(() => {
+    console.log('Skills from store:', skills)
+    setAvailableSkills(skills)
+  }, [skills])
 
   useEffect(() => {
     if (isOpen) {
       fetchCompanies()
       fetchCountries()
+      fetchSkills()
     }
-  }, [isOpen])
+  }, [isOpen, fetchSkills])
 
   useEffect(() => {
     if (selectedCountry) {
@@ -58,6 +80,15 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
       setFormData(prev => ({ ...prev, city: 0 }))
     }
   }, [selectedState])
+
+  // Close skill dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowSkillDropdown(false)
+    if (showSkillDropdown) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showSkillDropdown])
 
   const fetchCompanies = async () => {
     try {
@@ -114,6 +145,33 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
     }))
     setError(null)
   }
+
+  const handleSkillSelect = (skill: Skill) => {
+    if (!selectedSkills.find(s => s.id === skill.id)) {
+      const updatedSkills = [...selectedSkills, skill]
+      setSelectedSkills(updatedSkills)
+      setFormData(prev => ({
+        ...prev,
+        skills: updatedSkills.map(s => s.id)
+      }))
+    }
+    setSkillSearchTerm('')
+    setShowSkillDropdown(false)
+  }
+
+  const handleSkillRemove = (skillId: number) => {
+    const updatedSkills = selectedSkills.filter(s => s.id !== skillId)
+    setSelectedSkills(updatedSkills)
+    setFormData(prev => ({
+      ...prev,
+      skills: updatedSkills.map(s => s.id)
+    }))
+  }
+
+  const filteredSkills = availableSkills.filter(skill =>
+    skill.name.toLowerCase().includes(skillSearchTerm.toLowerCase()) &&
+    !selectedSkills.find(s => s.id === skill.id)
+  )
 
   const validateForm = () => {
     if (!formData.title.trim()) {
@@ -177,7 +235,8 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
           physical_address: '',
           city: 0,
           salary_min: '',
-          salary_max: ''
+          salary_max: '',
+          skills: []
         })
         setCompanies([])
       }, 2000)
@@ -203,13 +262,19 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
       physical_address: '',
       city: 0,
       salary_min: '',
-      salary_max: ''
+      salary_max: '',
+      skills: []
     })
     // Reset address selection
     setSelectedCountry(null)
     setSelectedState(null)
     setStates([])
     setCities([])
+    // Reset skills selection
+    setSelectedSkills([])
+    setAvailableSkills([])
+    setSkillSearchTerm('')
+    setShowSkillDropdown(false)
   }
 
   if (!isOpen) return null
@@ -448,6 +513,67 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Skills Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Required Skills
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={skillSearchTerm}
+                  onChange={(e) => {
+                    setSkillSearchTerm(e.target.value)
+                    setShowSkillDropdown(true)
+                  }}
+                  onFocus={() => setShowSkillDropdown(true)}
+                  placeholder="Search and select skills..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-black"
+                  disabled={isLoading}
+                />
+
+                {/* Skills Dropdown */}
+                {showSkillDropdown && filteredSkills.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredSkills.slice(0, 10).map((skill) => (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        onClick={() => handleSkillSelect(skill)}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm text-black"
+                      >
+                        {skill.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Skills */}
+              {selectedSkills.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSkills.map((skill) => (
+                      <div
+                        key={skill.id}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                      >
+                        {skill.name}
+                        <button
+                          type="button"
+                          onClick={() => handleSkillRemove(skill.id)}
+                          className="ml-2 text-blue-600 hover:text-blue-800"
+                          disabled={isLoading}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}

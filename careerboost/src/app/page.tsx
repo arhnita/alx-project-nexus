@@ -3,20 +3,15 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import {
   Search,
   Users,
-  Target,
-  TrendingUp,
-  ArrowRight,
-  Star,
   Briefcase,
-  Clock,
-  MapPin
+  ArrowRight,
+  Building2
 } from 'lucide-react'
 
 export default function HomePage() {
@@ -32,23 +27,23 @@ export default function HomePage() {
   const features = [
     {
       icon: Search,
-      title: 'AI-Powered Job Matching',
-      description: 'Get personalized job recommendations based on your skills and preferences'
+      title: 'Find Your Next Opportunity',
+      description: 'Browse thousands of job listings from top companies across all industries'
     },
     {
-      icon: Target,
-      title: 'Skill Gap Analysis',
-      description: 'Identify and bridge skill gaps with personalized learning recommendations'
+      icon: Briefcase,
+      title: 'Easy Application Process',
+      description: 'Apply to jobs with just a few clicks and track your application status'
+    },
+    {
+      icon: Building2,
+      title: 'For Recruiters',
+      description: 'Post jobs, manage applications, and find the perfect candidates for your team'
     },
     {
       icon: Users,
-      title: 'Professional Networking',
-      description: 'Connect with industry professionals and expand your network'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Career Analytics',
-      description: 'Track your career progress with detailed insights and metrics'
+      title: 'Build Your Profile',
+      description: 'Showcase your skills and experience to attract the right opportunities'
     }
   ]
 
@@ -57,7 +52,7 @@ export default function HomePage() {
       name: 'Sarah Johnson',
       role: 'Software Engineer at Google',
       avatar: 'https://images.unsplash.com/photo-1494790108755-2616b9a64c9e?w=100&h=100&fit=crop&crop=face',
-      content: 'Connect Hire helped me land my dream job at Google. The AI matching was incredibly accurate!'
+      content: 'Connect Hire helped me land my dream job at Google. The platform made the whole process so much easier!'
     },
     {
       name: 'Michael Chen',
@@ -69,41 +64,14 @@ export default function HomePage() {
       name: 'Emily Davis',
       role: 'Product Manager at Stripe',
       avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-      content: 'The skill development recommendations helped me transition into product management successfully.'
-    }
-  ]
-
-  const featuredJobs = [
-    {
-      title: 'Senior Frontend Developer',
-      company: 'Netflix',
-      location: 'Remote',
-      salary: '$130k - $170k',
-      type: 'Full-time',
-      logo: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=50&h=50&fit=crop'
-    },
-    {
-      title: 'Product Manager',
-      company: 'Airbnb',
-      location: 'San Francisco, CA',
-      salary: '$140k - $180k',
-      type: 'Full-time',
-      logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=50&h=50&fit=crop'
-    },
-    {
-      title: 'Data Scientist',
-      company: 'Uber',
-      location: 'New York, NY',
-      salary: '$120k - $160k',
-      type: 'Full-time',
-      logo: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=50&h=50&fit=crop'
+      content: 'The application process was seamless and I found multiple opportunities that matched my skills perfectly.'
     }
   ]
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center">
@@ -114,15 +82,7 @@ export default function HomePage() {
             </Link>
 
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/jobs" className="text-gray-700 hover:text-blue-600 font-medium">
-                Find Jobs
-              </Link>
-              <Link href="/companies" className="text-gray-700 hover:text-blue-600 font-medium">
-                Companies
-              </Link>
-              <Link href="/resources" className="text-gray-700 hover:text-blue-600 font-medium">
-                Resources
-              </Link>
+              {/* Navigation items removed for cleaner design */}
             </nav>
 
             <div className="flex items-center space-x-3">
@@ -146,26 +106,20 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Revolutionize Your Career with{' '}
+              Find Your Dream Job{' '}
               <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                AI-Powered
-              </span>{' '}
-              Job Matching
+                Today
+              </span>
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Connect with opportunities that match your skills, develop new capabilities,
-              and advance your career with intelligent recommendations.
+              Connect with top employers, showcase your skills, and land the perfect opportunity.
+              Whether you&apos;re looking for your next role or the perfect candidate, we&apos;ve got you covered.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link href="/register">
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   Start Your Journey
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/jobs">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-100 hover:bg-blue-600">
-                  Browse Jobs
                 </Button>
               </Link>
             </div>
@@ -178,10 +132,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Connect Hire?
+              Everything You Need to Succeed
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We combine cutting-edge AI with deep industry insights to accelerate your career growth
+              Powerful tools for job seekers and recruiters to connect and grow together
             </p>
           </div>
 
@@ -204,82 +158,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Jobs */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Featured Opportunities
-            </h2>
-            <p className="text-xl text-gray-600">
-              Discover roles at top companies waiting for your unique skills
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredJobs.map((job, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center">
-                      <Image
-                        src={job.logo}
-                        alt={job.company}
-                        width={48}
-                        height={48}
-                        className="w-12 h-12 rounded-lg mr-3"
-                      />
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{job.title}</h3>
-                        <p className="text-gray-600">{job.company}</p>
-                      </div>
-                    </div>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                      {job.type}
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {job.location}
-                    </div>
-                    <div className="flex items-center">
-                      <Briefcase className="w-4 h-4 mr-2" />
-                      {job.salary}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2" />
-                      Posted 2 days ago
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    View Details
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="text-center mt-8">
-            <Link href="/jobs">
-              <Button variant="outline" size="lg">
-                View All Jobs
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Success Stories
+              What Our Users Say
             </h2>
             <p className="text-xl text-gray-600">
-              Join thousands of professionals who advanced their careers with Connect Hire
+              Join thousands of professionals who found success with Connect Hire
             </p>
           </div>
 
@@ -289,18 +176,16 @@ export default function HomePage() {
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                      <div key={i} className="w-5 h-5 text-yellow-400">★</div>
                     ))}
                   </div>
                   <p className="text-gray-700 mb-4">&ldquo;{testimonial.content}&rdquo;</p>
                   <div className="flex items-center">
-                    <Image
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full mr-3"
-                    />
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                      <span className="text-blue-600 font-medium text-sm">
+                        {testimonial.name.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
                     <div>
                       <p className="font-semibold text-gray-900">{testimonial.name}</p>
                       <p className="text-sm text-gray-600">{testimonial.role}</p>
@@ -317,20 +202,20 @@ export default function HomePage() {
       <section className="py-20 bg-blue-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Boost Your Career?
+            Ready to Get Started?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join over 50,000 professionals who trust Connect Hire for their career growth
+            Join Connect Hire today and take the next step in your career journey
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
               <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                Get Started Free
+                Create Account
               </Button>
             </Link>
-            <Link href="/demo">
+            <Link href="/login">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-100 hover:bg-blue-700">
-                Watch Demo
+                Sign In
               </Button>
             </Link>
           </div>
@@ -349,25 +234,25 @@ export default function HomePage() {
                 <span className="text-xl font-bold">Connect Hire</span>
               </div>
               <p className="text-gray-400">
-                Revolutionizing career development with AI-powered job matching and skill development.
+                Connecting talented professionals with amazing opportunities.
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">For Talents</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="/jobs" className="hover:text-white">Find Jobs</Link></li>
-                <li><Link href="/skills" className="hover:text-white">Skill Assessment</Link></li>
-                <li><Link href="/learning" className="hover:text-white">Learning Paths</Link></li>
-                <li><Link href="/network" className="hover:text-white">Networking</Link></li>
+                <li><Link href="/skills" className="hover:text-white">Skills</Link></li>
+                <li><Link href="/applications" className="hover:text-white">Applications</Link></li>
+                <li><Link href="/profile" className="hover:text-white">Profile</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">For Recruiters</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/post-job" className="hover:text-white">Post Jobs</Link></li>
-                <li><Link href="/candidates" className="hover:text-white">Find Candidates</Link></li>
-                <li><Link href="/analytics" className="hover:text-white">Analytics</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
+                <li><Link href="/my-jobs" className="hover:text-white">Post Jobs</Link></li>
+                <li><Link href="/applications" className="hover:text-white">Applications</Link></li>
+                <li><Link href="/company" className="hover:text-white">Company</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
               </ul>
             </div>
             <div>
