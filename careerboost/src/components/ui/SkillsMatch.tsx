@@ -4,22 +4,21 @@ import { useState, useEffect, useCallback } from 'react'
 import { Target } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useSkillsStore } from '@/store/skillsStore'
-import { apiService, Job } from '@/services/api'
+import { Skill } from '@/services/api'
 
 interface SkillsMatchProps {
-  jobId?: number
-  jobSkills?: any[]
+  jobSkills?: Skill[]
   className?: string
   showIcon?: boolean
 }
 
-export function SkillsMatch({ jobId, jobSkills, className = '', showIcon = true }: SkillsMatchProps) {
+export function SkillsMatch({ jobSkills, className = '', showIcon = true }: SkillsMatchProps) {
   const { user } = useAuthStore()
   const { userSkills, fetchUserSkills } = useSkillsStore()
   const [skillsMatch, setSkillsMatch] = useState<number | null>(null)
 
   // Calculate skills match percentage
-  const calculateSkillsMatch = useCallback((skills: any[]) => {
+  const calculateSkillsMatch = useCallback((skills: Skill[]) => {
     if (!skills || skills.length === 0 || userSkills.length === 0) {
       return 0
     }
