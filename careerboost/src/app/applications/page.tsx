@@ -166,11 +166,11 @@ export default function ApplicationsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="lg:flex">
+        <div className="sm:flex">
           <Sidebar />
           <main className={cn(
-            'flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300',
-            isSidebarCollapsed ? 'lg:ml-12' : 'lg:ml-0',
+            'flex-1 p-4 sm:p-6 md:p-8 transition-all duration-300',
+            isSidebarCollapsed ? 'sm:ml-12' : 'sm:ml-0',
             'ml-0'
           )}>
             <div className="max-w-4xl mx-auto">
@@ -191,11 +191,11 @@ export default function ApplicationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="lg:flex">
+      <div className="sm:flex">
         <Sidebar />
         <main className={cn(
-          'flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300',
-          isSidebarCollapsed ? 'lg:ml-12' : 'lg:ml-0',
+          'flex-1 p-4 sm:p-6 md:p-8 transition-all duration-300',
+          isSidebarCollapsed ? 'sm:ml-12' : 'sm:ml-0',
           'ml-0'
         )}>
           <div className="max-w-4xl mx-auto">

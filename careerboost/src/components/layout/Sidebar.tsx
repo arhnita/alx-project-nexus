@@ -93,19 +93,19 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
 
   return (
     <aside className={cn(
-      'fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
+      'fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out sm:translate-x-0 sm:static sm:inset-0',
       // Desktop width based on collapsed state
-      isSidebarCollapsed ? 'lg:w-12' : 'lg:w-64',
+      isSidebarCollapsed ? 'sm:w-12' : 'sm:w-64',
       // Mobile width - always full width on mobile
       'w-64',
       // Mobile show/hide
-      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
+      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0',
       className
     )}>
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 lg:hidden"
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 sm:hidden"
           onClick={onMobileMenuClose}
         />
       )}
@@ -114,7 +114,7 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
         <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
           <div className={cn('px-4', isSidebarCollapsed && 'px-1')}>
             {/* Toggle Button */}
-            <div className="hidden lg:flex justify-end mb-4">
+            <div className="hidden sm:flex justify-end mb-4">
               <button
                 onClick={toggleSidebar}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -154,7 +154,7 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
                     )} />
                     <span className={cn(
                       'truncate transition-all duration-300',
-                      isSidebarCollapsed && 'opacity-0 w-0 overflow-hidden lg:hidden'
+                      isSidebarCollapsed && 'opacity-0 w-0 overflow-hidden sm:hidden'
                     )}>
                       {item.title}
                     </span>
@@ -182,7 +182,7 @@ export function Sidebar({ className, isMobileMenuOpen, onMobileMenuClose }: Side
                 )} />
                 <span className={cn(
                   'truncate transition-all duration-300',
-                  isSidebarCollapsed && 'opacity-0 w-0 overflow-hidden lg:hidden'
+                  isSidebarCollapsed && 'opacity-0 w-0 overflow-hidden sm:hidden'
                 )}>
                   Settings
                 </span>

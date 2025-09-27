@@ -98,7 +98,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
     setApplyingJobs(prev => new Set(prev).add(jobId))
 
     try {
-      await checkAndApply(jobId, parseInt(user.id))
+      await checkAndApply(jobId)
       // Success handling is done in the store
     } catch (err) {
       console.error('Failed to apply to job:', err)

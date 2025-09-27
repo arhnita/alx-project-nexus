@@ -44,7 +44,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
   }, [error, clearError])
 
   const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.is_read) {
+    if (!notification.read_at) {
       await markNotificationsAsRead([notification.id])
     }
   }
@@ -63,8 +63,12 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
 
   const getNotificationIcon = (type?: string) => {
     switch (type) {
-      case 'job_application':
+      case 'company_created':
+        return '🏢'
+      case 'job_posted':
         return '💼'
+      case 'job_application':
+        return '📄'
       case 'message':
         return '💬'
       case 'update':
@@ -86,7 +90,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
           <div className="flex items-center space-x-2">
-            {notifications.some(n => !n.is_read) && (
+            {notifications.some(n => !n.read_at) && (
               <button
                 onClick={handleMarkAllRead}
                 className="flex items-center text-sm text-blue-600 hover:text-blue-800"
@@ -138,7 +142,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${
-                    notification.is_read
+                    notification.read_at
                       ? 'hover:bg-gray-50'
                       : 'bg-blue-50 hover:bg-blue-100'
                   }`}
@@ -146,26 +150,26 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-1">
                       <span className="text-lg">
-                        {getNotificationIcon(notification.notification_type)}
+                        {getNotificationIcon(notification.event_type)}
                       </span>
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-medium ${
-                          notification.is_read ? 'text-gray-900' : 'text-gray-900'
+                          notification.read_at ? 'text-gray-900' : 'text-gray-900'
                         }`}>
                           {notification.title}
                         </p>
-                        {!notification.is_read && (
+                        {!notification.read_at && (
                           <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 ml-2"></div>
                         )}
                       </div>
 
                       <p className={`text-sm mt-1 ${
-                        notification.is_read ? 'text-gray-600' : 'text-gray-700'
+                        notification.read_at ? 'text-gray-600' : 'text-gray-700'
                       }`}>
-                        {notification.message}
+                        {notification.body}
                       </p>
 
                       <p className="text-xs text-gray-500 mt-2">
@@ -173,7 +177,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                       </p>
                     </div>
 
-                    {!notification.is_read && (
+                    {!notification.read_at && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()

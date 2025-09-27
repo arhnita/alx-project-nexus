@@ -28,7 +28,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     try {
       const response = await apiService.getNotifications()
       set({
-        notifications: response.data || [],
+        notifications: response.results || [],
         isLoading: false
       })
     } catch (error) {
@@ -57,7 +57,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const { notifications } = get()
       const updatedNotifications = notifications.map(notification =>
         notificationIds.includes(notification.id)
-          ? { ...notification, is_read: true }
+          ? { ...notification, read_at: new Date().toISOString() }
           : notification
       )
 
@@ -75,7 +75,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     try {
       const { notifications } = get()
       const unreadIds = notifications
-        .filter(n => !n.is_read)
+        .filter(n => !n.read_at)
         .map(n => n.id)
 
       if (unreadIds.length > 0) {

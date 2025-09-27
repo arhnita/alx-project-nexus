@@ -13,7 +13,7 @@ interface JobApplicationState {
   setShowApplicationModal: (show: boolean) => void
   setCoverLetter: (coverLetter: string) => void
   clearError: () => void
-  checkAndApply: (jobId: number, userId: number) => Promise<void>
+  checkAndApply: (jobId: number) => Promise<void>
   loadAppliedJobs: () => Promise<void>
   isJobApplied: (jobId: number) => boolean
 }
@@ -70,7 +70,7 @@ export const useJobApplicationStore = create<JobApplicationState>((set, get) => 
     }
   },
 
-  checkAndApply: async (jobId: number, _userId: number) => {
+  checkAndApply: async (jobId: number) => {
     // Check if user has resume first
     const fileCheck = await apiService.checkUserFiles()
 

@@ -4,17 +4,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
-import { useJobApplicationStore } from '@/store/jobApplicationStore'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
+import { JobCreateModal } from '@/components/modals/JobCreateModal'
 import { apiService, Job, JobsResponse } from '@/services/api'
 import {
-  Search,
+  Plus,
   MapPin,
   Calendar,
   Building2,
@@ -23,28 +21,21 @@ import {
   ChevronRight,
   Star,
   Briefcase,
-  Filter,
-  Globe,
-  TrendingUp
+  Eye,
+  Edit,
+  Users,
+  BarChart3
 } from 'lucide-react'
 
-export default function JobsPage() {
+export default function MyJobsPage() {
   const { isAuthenticated, user } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
-  const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(12)
-  const [sortBy, setSortBy] = useState<'date' | 'salary' | 'relevance'>('date')
-  const [filters, setFilters] = useState({
-    showRemoteOnly: false,
-    showPromotedOnly: false,
-    salaryRange: 'all'
-  })
   const [pagination, setPagination] = useState<{
     count: number
     next: string | null
@@ -54,13 +45,14 @@ export default function JobsPage() {
     next: null,
     previous: null
   })
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const fetchJobs = useCallback(async (search?: string) => {
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const response: JobsResponse = await apiService.getJobs(currentPage, pageSize, search)
+      const response: JobsResponse = await apiService.getRecruiterJobs(currentPage, pageSize)
 
       setJobs(response.results)
       setPagination({
@@ -82,18 +74,13 @@ export default function JobsPage() {
       return
     }
 
+    if (user?.userType !== 'recruiter') {
+      router.push('/dashboard')
+      return
+    }
+
     fetchJobs()
-    loadAppliedJobs() // Load applied jobs to show status
-  }, [isAuthenticated, router, fetchJobs, currentPage, loadAppliedJobs])
-
-  const handleSearch = async () => {
-    setCurrentPage(1)
-    await fetchJobs(searchTerm)
-  }
-
-  const handlePageChange = async (page: number) => {
-    setCurrentPage(page)
-  }
+  }, [isAuthenticated, user, router, fetchJobs])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -112,7 +99,6 @@ export default function JobsPage() {
     })
   }
 
-
   const totalPages = Math.ceil(pagination.count / pageSize)
 
   const LoadingSkeleton = () => (
@@ -121,7 +107,6 @@ export default function JobsPage() {
         <Card key={i} className="border-0 shadow-sm">
           <CardContent className="p-6">
             <div className="animate-pulse">
-              {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -129,27 +114,19 @@ export default function JobsPage() {
                 </div>
                 <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
               </div>
-
-              {/* Location and Salary */}
               <div className="space-y-2 mb-4">
                 <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
               </div>
-
-              {/* Description */}
               <div className="space-y-2 mb-4">
                 <div className="h-4 bg-gray-200 rounded w-full"></div>
                 <div className="h-4 bg-gray-200 rounded w-full"></div>
                 <div className="h-4 bg-gray-200 rounded w-2/3"></div>
               </div>
-
-              {/* Categories */}
               <div className="flex gap-2 mb-4">
                 <div className="h-6 bg-gray-200 rounded-full w-16"></div>
                 <div className="h-6 bg-gray-200 rounded-full w-20"></div>
               </div>
-
-              {/* Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="h-4 bg-gray-200 rounded w-1/3"></div>
                 <div className="h-8 bg-gray-200 rounded w-20"></div>
@@ -203,91 +180,65 @@ export default function JobsPage() {
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Find Jobs</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Jobs</h1>
                     <p className="text-sm sm:text-base text-gray-600 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      {pagination.count} job{pagination.count !== 1 ? 's' : ''} available
+                      <Briefcase className="w-4 h-4" />
+                      {pagination.count} job{pagination.count !== 1 ? 's' : ''} posted
                     </p>
                   </div>
 
-                  {/* Search */}
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:w-64 lg:w-80">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <Input
-                        type="text"
-                        placeholder="Search jobs, companies, locations..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        className="pl-10"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleSearch}
-                      disabled={loading}
-                      className="w-full sm:w-auto"
-                    >
-                      Search
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                    className="w-full sm:w-auto"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Post New Job
+                  </Button>
                 </div>
 
-                {/* Filters and Sort */}
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={filters.showPromotedOnly ? "primary" : "outline"}
-                      size="sm"
-                      onClick={() => setFilters(f => ({ ...f, showPromotedOnly: !f.showPromotedOnly }))}
-                      className="flex items-center gap-1"
-                    >
-                      <Star className="w-3 h-3" />
-                      Featured
-                    </Button>
-                    <Button
-                      variant={filters.showRemoteOnly ? "primary" : "outline"}
-                      size="sm"
-                      onClick={() => setFilters(f => ({ ...f, showRemoteOnly: !f.showRemoteOnly }))}
-                      className="flex items-center gap-1"
-                    >
-                      <Globe className="w-3 h-3" />
-                      Remote
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                    >
-                      <Filter className="w-3 h-3" />
-                      More filters
-                    </Button>
-                  </div>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Total Jobs</p>
+                          <p className="text-2xl font-bold text-gray-900">{pagination.count}</p>
+                        </div>
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Briefcase className="w-5 h-5 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">Sort by:</span>
-                    <Button
-                      variant={sortBy === 'date' ? "primary" : "outline"}
-                      size="sm"
-                      onClick={() => setSortBy('date')}
-                    >
-                      Date
-                    </Button>
-                    <Button
-                      variant={sortBy === 'salary' ? "primary" : "outline"}
-                      size="sm"
-                      onClick={() => setSortBy('salary')}
-                    >
-                      Salary
-                    </Button>
-                    <Button
-                      variant={sortBy === 'relevance' ? "primary" : "outline"}
-                      size="sm"
-                      onClick={() => setSortBy('relevance')}
-                    >
-                      Relevance
-                    </Button>
-                  </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Applications</p>
+                          <p className="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Users className="w-5 h-5 text-green-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Views</p>
+                          <p className="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <BarChart3 className="w-5 h-5 text-purple-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -312,19 +263,14 @@ export default function JobsPage() {
                 <div className="bg-gray-50 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                   <Briefcase className="w-12 h-12 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
-                <p className="text-gray-600 max-w-md mx-auto">
-                  {searchTerm ? 'Try adjusting your search criteria or filters' : 'Check back later for new opportunities'}
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs posted yet</h3>
+                <p className="text-gray-600 max-w-md mx-auto mb-6">
+                  Start by posting your first job to attract talented candidates
                 </p>
-                {searchTerm && (
-                  <Button
-                    variant="outline"
-                    onClick={() => { setSearchTerm(''); fetchJobs(); }}
-                    className="mt-4"
-                  >
-                    Clear search
-                  </Button>
-                )}
+                <Button onClick={() => setShowCreateModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Post Your First Job
+                </Button>
               </div>
             ) : (
               <div className="relative">
@@ -417,6 +363,10 @@ export default function JobsPage() {
                               <Calendar className="w-3 h-3" />
                               <span>Posted {formatDate(job.date_posted)}</span>
                             </div>
+                            <div className="flex items-center gap-1 text-xs text-blue-600">
+                              <Users className="w-3 h-3" />
+                              <span>0 applications</span>
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-2">
@@ -426,28 +376,17 @@ export default function JobsPage() {
                               onClick={() => router.push(`/jobs/${job.id}`)}
                               className="px-3 py-2 text-sm font-medium"
                             >
-                              View Details
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
                             </Button>
-                            {user?.userType === 'talent' && (
-                              isJobApplied(job.id) ? (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled
-                                  className="px-3 py-2 text-sm font-medium border-green-300 text-green-700 bg-green-50"
-                                >
-                                  Applied
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  onClick={() => checkAndApply(job.id)}
-                                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium"
-                                >
-                                  Apply
-                                </Button>
-                              )
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="px-3 py-2 text-sm font-medium"
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -468,7 +407,7 @@ export default function JobsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
+                    onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={!pagination.previous || loading}
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -493,7 +432,7 @@ export default function JobsPage() {
                           key={pageNum}
                           variant={pageNum === currentPage ? "primary" : "outline"}
                           size="sm"
-                          onClick={() => handlePageChange(pageNum)}
+                          onClick={() => setCurrentPage(pageNum)}
                           disabled={loading}
                           className="w-8 h-8 p-0"
                         >
@@ -506,7 +445,7 @@ export default function JobsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
+                    onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={!pagination.next || loading}
                   >
                     <span className="hidden sm:inline">Next</span>
@@ -518,7 +457,16 @@ export default function JobsPage() {
           </div>
         </main>
       </div>
-      <JobApplicationModal />
+
+      {/* Job Creation Modal */}
+      <JobCreateModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          // Refresh jobs list
+          fetchJobs()
+        }}
+      />
     </div>
   )
 }

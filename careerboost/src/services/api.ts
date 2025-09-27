@@ -243,20 +243,73 @@ export interface JobApplicationResponse {
 
 export type JobApplicationListResponse = PaginatedResponse<JobApplication>
 
+export interface JobCreateData {
+  title: string
+  description: string
+  company: number
+  physical_address: string
+  city: number
+  salary_min: string
+  salary_max: string
+}
+
+export interface JobCreateResponse {
+  success: boolean
+  message: string
+  data: Job
+  status_code: number
+}
+
+export interface Company {
+  id: number
+  name: string
+  description: string
+  contact_details: string
+  website: string
+  status: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type CompaniesResponse = PaginatedResponse<Company>
+
+export interface CompanyCreateData {
+  name: string
+  description: string
+  contact_details: string
+  website: string
+}
+
+export interface CompanyUpdateData {
+  name: string
+  description: string
+  contact_details: string
+  website: string
+}
+
+export interface CompanyResponse {
+  success: boolean
+  message: string
+  data: Company
+  status_code: number
+}
+
 export interface Notification {
   id: number
+  event_type: string
   title: string
-  message: string
-  is_read: boolean
+  body: string
+  data: Record<string, unknown>
+  status: string
+  channels: number
   created_at: string
-  notification_type?: string
+  read_at: string | null
 }
 
 export interface NotificationResponse {
-  success: boolean
-  message: string
-  data: Notification[]
-  status_code: number
+  results: Notification[]
+  page: number
+  page_size: number
 }
 
 export interface UnreadCountResponse {
@@ -825,6 +878,84 @@ class ApiService {
     })
 
     return { count: response.count }
+  }
+
+  async createJob(data: JobCreateData): Promise<JobCreateResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/jobs/`
+
+    return this.request<JobCreateResponse>(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+  }
+
+  async getRecruiterJobs(page = 1, pageSize = 10): Promise<JobsResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/jobs/?page=${page}&page_size=${pageSize}`
+
+    return this.request<JobsResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async getCompanies(page = 1, pageSize = 50): Promise<CompaniesResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/companies/?page=${page}&page_size=${pageSize}`
+
+    return this.request<CompaniesResponse>(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+  }
+
+  async createCompany(data: CompanyCreateData): Promise<CompanyResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/companies/`
+
+    return this.request<CompanyResponse>(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+  }
+
+  async updateCompany(companyId: number, data: CompanyUpdateData): Promise<CompanyResponse> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/companies/${companyId}/`
+
+    return this.request<CompanyResponse>(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deleteCompany(companyId: number): Promise<{ success: boolean; message: string }> {
+    const accessToken = localStorage.getItem('access_token')
+    const url = `/api/companies/${companyId}/`
+
+    return this.request<{ success: boolean; message: string }>(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
   }
 
   async getNotifications(): Promise<NotificationResponse> {

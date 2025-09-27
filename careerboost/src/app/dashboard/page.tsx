@@ -32,12 +32,12 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="lg:flex">
+      <div className="sm:flex">
         <Sidebar />
         <main className={cn(
-          'flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300',
+          'flex-1 p-4 sm:p-6 md:p-8 transition-all duration-300',
           // Adjust left margin based on sidebar state on desktop
-          isSidebarCollapsed ? 'lg:ml-12' : 'lg:ml-0',
+          isSidebarCollapsed ? 'sm:ml-12' : 'sm:ml-0',
           // No left margin on mobile
           'ml-0'
         )}>

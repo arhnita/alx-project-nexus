@@ -1,10 +1,13 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { ActivityFeed } from './ActivityFeed'
+import { apiService } from '@/services/api'
 import {
   Briefcase,
   Users,
@@ -22,6 +25,26 @@ import {
 
 export function RecruiterDashboard() {
   const { user } = useAuthStore()
+  const router = useRouter()
+  const [jobsCount, setJobsCount] = useState<number>(0)
+  const [loadingStats, setLoadingStats] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await apiService.getRecruiterJobs(1, 1) // Get first page to get count
+        setJobsCount(response.count)
+      } catch (error) {
+        console.error('Failed to fetch jobs count:', error)
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+
+    if (user && user.userType === 'recruiter') {
+      fetchStats()
+    }
+  }, [user])
 
   if (!user || user.userType !== 'recruiter') return null
 
@@ -149,16 +172,20 @@ export function RecruiterDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/my-jobs')}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Jobs</p>
-                <p className="text-3xl font-bold text-gray-900">12</p>
-                <div className="flex items-center mt-1">
-                  <AlertTriangle className="w-4 h-4 text-red-500 mr-1" />
-                  <p className="text-sm text-red-600">3 expiring soon</p>
-                </div>
+                {loadingStats ? (
+                  <div className="h-9 w-12 bg-gray-200 animate-pulse rounded"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">{jobsCount}</p>
+                )}
+                <p className="text-sm text-blue-600 flex items-center mt-1">
+                  <Briefcase className="w-4 h-4 mr-1" />
+                  View all jobs
+                </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Briefcase className="w-6 h-6 text-blue-600" />
@@ -225,7 +252,7 @@ export function RecruiterDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Active Job Postings
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => router.push('/my-jobs')}>
                 View All
                 <ArrowUpRight className="w-4 h-4 ml-1" />
               </Button>
