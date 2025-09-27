@@ -147,16 +147,16 @@ export function FileUpload({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2 flex-shrink-0">
+              <div className="flex items-center space-x-2 flex-shrink-0 w-full sm:w-auto">
                 {existingFile.file_path && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(existingFile.file_path, '_blank')}
-                    className="flex items-center space-x-1"
+                    className="flex items-center space-x-1 flex-1 sm:flex-none justify-center min-w-0"
                   >
                     <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">Download</span>
+                    <span className="text-xs sm:text-sm">Download</span>
                   </Button>
                 )}
                 <Button
@@ -164,14 +164,14 @@ export function FileUpload({
                   size="sm"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="flex items-center space-x-1 text-red-600 border-red-200 hover:bg-red-50"
+                  className="flex items-center space-x-1 text-red-600 border-red-200 hover:bg-red-50 flex-1 sm:flex-none justify-center min-w-0"
                 >
                   {deleting ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
                   ) : (
                     <X className="w-4 h-4" />
                   )}
-                  <span className="hidden sm:inline">{deleting ? 'Deleting...' : 'Remove'}</span>
+                  <span className="text-xs sm:text-sm">{deleting ? 'Deleting...' : 'Remove'}</span>
                 </Button>
               </div>
             </div>

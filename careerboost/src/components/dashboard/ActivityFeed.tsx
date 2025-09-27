@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { apiService, FeedItem, FeedResponse } from '@/services/api'
@@ -16,7 +17,8 @@ import {
   ChevronRight,
   RefreshCw,
   Activity,
-  Send
+  Send,
+  ExternalLink
 } from 'lucide-react'
 
 interface ActivityFeedProps {
@@ -26,6 +28,7 @@ interface ActivityFeedProps {
 export function ActivityFeed({ className }: ActivityFeedProps) {
   const { user } = useAuthStore()
   const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
+  const router = useRouter()
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -89,6 +92,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
     setCursorHistory([])
     fetchFeed()
   }
+
 
   const handleApplyToJob = async (jobId: number) => {
     if (!user || user.userType !== 'talent') {
@@ -199,35 +203,50 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
                         </div>
                       </div>
                       {user?.userType === 'talent' && (
-                        isJobApplied(payload.job!.id) ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled
-                            className="flex-shrink-0 border-green-300 text-green-700 bg-green-50"
-                          >
-                            Applied
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => handleApplyToJob(payload.job!.id)}
-                            disabled={applyingJobs.has(payload.job.id)}
-                            className="flex-shrink-0"
-                          >
-                            {applyingJobs.has(payload.job.id) ? (
-                              <>
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                Applying...
-                              </>
+                        <div className="flex flex-col gap-2 flex-shrink-0">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => router.push(`/jobs/${payload.job!.id}`)}
+                              className="flex-shrink-0"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              View Details
+                            </Button>
+
+                            {isJobApplied(payload.job!.id) ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled
+                                className="flex-shrink-0 border-green-300 text-green-700 bg-green-50"
+                              >
+                                Applied
+                              </Button>
                             ) : (
-                              <>
-                                <Send className="w-3 h-3 mr-1" />
-                                Apply
-                              </>
+                              <Button
+                                size="sm"
+                                onClick={() => handleApplyToJob(payload.job!.id)}
+                                disabled={applyingJobs.has(payload.job.id)}
+                                className="flex-shrink-0"
+                              >
+                                {applyingJobs.has(payload.job.id) ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                    Applying...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-3 h-3 mr-1" />
+                                    Apply
+                                  </>
+                                )}
+                              </Button>
                             )}
-                          </Button>
-                        )
+                          </div>
+
+                        </div>
                       )}
                     </div>
                   </div>
@@ -299,6 +318,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
         return null
     }
   }
+
 
   return (
     <Card className={className}>

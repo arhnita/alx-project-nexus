@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { SkillsMatch } from '@/components/ui/SkillsMatch'
 import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
 import { apiService, Job, JobsResponse } from '@/services/api'
 import {
@@ -338,65 +339,64 @@ export default function JobsPage() {
                     </div>
                   </div>
                 )}
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {jobs.map((job) => (
-                    <Card key={job.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-sm">
-                      <CardContent className="p-6">
-                        {/* Header */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
-                              <h2 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 pr-2">
-                                {job.title}
-                              </h2>
-                              {job.is_promoted && (
-                                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 p-1.5 rounded-full">
-                                  <Star className="w-3 h-3 text-white fill-current" />
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-2 text-gray-600 mb-3">
-                              <div className="flex items-center gap-1 text-sm">
-                                <Building2 className="w-4 h-4" />
-                                <span className="font-medium">{job.company_name}</span>
+                    <Card key={job.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-sm flex flex-col h-full">
+                      <CardContent className="p-4 sm:p-6 flex flex-col h-full">
+                        <div className="flex-1 flex flex-col">
+                          {/* Header */}
+                          <div className="mb-3 sm:mb-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h2 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 pr-2 flex-1">
+                              {job.title}
+                            </h2>
+                            {job.is_promoted && (
+                              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 p-1.5 rounded-full flex-shrink-0 ml-2">
+                                <Star className="w-3 h-3 text-white fill-current" />
                               </div>
-                            </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Building2 className="w-4 h-4 flex-shrink-0" />
+                            <span className="font-medium text-sm truncate">{job.company_name}</span>
                           </div>
                         </div>
 
                         {/* Location and Salary */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>
-                              {typeof job.physical_address === 'string' ? (
-                                job.city_name || job.physical_address
-                              ) : job.physical_address.city && job.physical_address.state ? (
-                                `${job.physical_address.city}, ${job.physical_address.state}`
-                              ) : (
-                                job.city_name || 'Location not specified'
-                              )}
-                            </span>
-                            {typeof job.physical_address === 'object' && job.physical_address.country !== 'United States' && (
-                              <span className="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                                {job.physical_address.country}
+                        <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+                          <div className="flex items-start gap-1 text-xs sm:text-sm text-gray-600">
+                            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <span className="break-words">
+                                {typeof job.physical_address === 'string' ? (
+                                  job.city_name || job.physical_address
+                                ) : job.physical_address.city && job.physical_address.state ? (
+                                  `${job.physical_address.city}, ${job.physical_address.state}`
+                                ) : (
+                                  job.city_name || 'Location not specified'
+                                )}
                               </span>
-                            )}
+                              {typeof job.physical_address === 'object' && job.physical_address.country !== 'United States' && (
+                                <span className="ml-1 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                                  {job.physical_address.country}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           {job.salary_min && job.salary_max && (
-                            <div className="flex items-center gap-1 text-sm text-green-600 font-medium">
-                              <DollarSign className="w-4 h-4" />
-                              <span>${parseFloat(job.salary_min).toLocaleString()} - ${parseFloat(job.salary_max).toLocaleString()}</span>
+                            <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600 font-medium">
+                              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">${parseFloat(job.salary_min).toLocaleString()} - ${parseFloat(job.salary_max).toLocaleString()}</span>
                             </div>
                           )}
                         </div>
 
                         {/* Description */}
-                        <p className="text-gray-700 text-sm mb-4 line-clamp-3 leading-relaxed">
-                          {job.description.length > 150
-                            ? `${job.description.substring(0, 150)}...`
+                        <p className="text-gray-700 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-3 leading-relaxed">
+                          {job.description.length > 120
+                            ? `${job.description.substring(0, 120)}...`
                             : job.description
                           }
                         </p>
@@ -438,22 +438,28 @@ export default function JobsPage() {
                             )}
                           </div>
                         )}
+                        </div>
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Calendar className="w-3 h-3" />
-                              <span>Posted {formatDate(job.date_posted)}</span>
-                            </div>
+                        <div className="flex flex-col gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-100 mt-auto">
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            <span>Posted {formatDate(job.date_posted)}</span>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          {/* Skills Match */}
+                          {user?.userType === 'talent' && job.skills && job.skills.length > 0 && (
+                            <div className="flex justify-center mb-2">
+                              <SkillsMatch jobSkills={job.skills} />
+                            </div>
+                          )}
+
+                          <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => router.push(`/jobs/${job.id}`)}
-                              className="px-3 py-2 text-sm font-medium"
+                              className="flex-1 px-2 py-1.5 text-xs sm:text-sm font-medium"
                             >
                               View Details
                             </Button>
@@ -463,7 +469,7 @@ export default function JobsPage() {
                                   size="sm"
                                   variant="outline"
                                   disabled
-                                  className="px-3 py-2 text-sm font-medium border-green-300 text-green-700 bg-green-50"
+                                  className="flex-1 px-2 py-1.5 text-xs sm:text-sm font-medium border-green-300 text-green-700 bg-green-50"
                                 >
                                   Applied
                                 </Button>
@@ -471,7 +477,7 @@ export default function JobsPage() {
                                 <Button
                                   size="sm"
                                   onClick={() => checkAndApply(job.id)}
-                                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium"
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 text-xs sm:text-sm font-medium"
                                 >
                                   Apply
                                 </Button>

@@ -9,6 +9,7 @@ import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { SkillsMatch } from '@/components/ui/SkillsMatch'
 import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
 import { cn } from '@/lib/utils'
 import { apiService, Job } from '@/services/api'
@@ -322,9 +323,14 @@ export default function JobDetailsPage() {
                 {job.skills && job.skills.length > 0 && (
                   <Card className="shadow-sm">
                     <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Star className="w-5 h-5" />
-                        <span>Required Skills</span>
+                      <CardTitle className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Star className="w-5 h-5" />
+                          <span>Required Skills</span>
+                        </div>
+                        {user?.userType === 'talent' && (
+                          <SkillsMatch jobSkills={job.skills} />
+                        )}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

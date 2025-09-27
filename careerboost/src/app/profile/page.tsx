@@ -264,15 +264,15 @@ export default function ProfilePage() {
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Profile</h1>
               <p className="text-gray-600">Manage your account information</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
               {/* Profile Overview Card */}
               <div className="lg:col-span-1">
                 <Card>
@@ -537,9 +537,9 @@ export default function ProfilePage() {
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-6">
                           {/* Resume Upload */}
-                          <div>
+                          <div className="w-full">
                             <FileUploadComponent
                               type="resume"
                               title="Resume / CV"
@@ -554,7 +554,7 @@ export default function ProfilePage() {
                           </div>
 
                           {/* Cover Letter Upload */}
-                          <div>
+                          <div className="w-full">
                             <FileUploadComponent
                               type="cover_letter"
                               title="Cover Letter"
@@ -570,12 +570,12 @@ export default function ProfilePage() {
                         </div>
                       )}
 
-                      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start space-x-3">
-                          <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
-                          <div className="text-sm">
+                      <div className="mt-4 md:mt-6 p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-2 md:space-x-3">
+                          <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div className="text-xs md:text-sm">
                             <p className="font-medium text-blue-900 mb-1">Document Tips:</p>
-                            <ul className="text-blue-700 space-y-1">
+                            <ul className="text-blue-700 space-y-0.5 md:space-y-1">
                               <li>• Keep your resume updated with latest experience and skills</li>
                               <li>• Tailor your cover letter for specific job applications</li>
                               <li>• Supported formats: PDF, DOC, DOCX (up to 10MB each)</li>
