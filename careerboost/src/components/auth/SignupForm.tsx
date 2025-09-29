@@ -93,9 +93,9 @@ export function SignupForm() {
     try {
       await signup(formData)
       setShowSuccess(true)
-      // Redirect to login after 2 seconds
+      // Redirect to verification page after 2 seconds
       setTimeout(() => {
-        router.push('/login')
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       }, 2000)
     } catch {
       // Error handling is done in the store
@@ -134,7 +134,7 @@ export function SignupForm() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Account Created Successfully!</h3>
                 <p className="text-gray-600 mb-4">
-                  Your account has been created. You will be redirected to login shortly.
+                  Please check your email for a verification code. You will be redirected to the verification page shortly.
                 </p>
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               </div>

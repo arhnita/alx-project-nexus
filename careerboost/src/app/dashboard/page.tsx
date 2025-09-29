@@ -6,6 +6,8 @@ import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { JobSeekerDashboard } from '@/components/dashboard/JobSeekerDashboard'
 import { RecruiterDashboard } from '@/components/dashboard/RecruiterDashboard'
+import { EmailVerificationBanner } from '@/components/ui/EmailVerificationBanner'
+import { useEmailVerification } from '@/hooks/useEmailVerification'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -13,6 +15,7 @@ import { cn } from '@/lib/utils'
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
+  const { needsVerification, userEmail } = useEmailVerification()
   const router = useRouter()
 
   useEffect(() => {
@@ -44,6 +47,10 @@ export default function DashboardPage() {
           // No left margin on mobile
           'ml-0'
         )}>
+          {needsVerification && userEmail && (
+            <EmailVerificationBanner userEmail={userEmail} userStatus={user.status} />
+          )}
+
           {user.userType === 'talent' ? (
             <JobSeekerDashboard />
           ) : (

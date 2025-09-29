@@ -44,6 +44,7 @@ export interface LoginResponse {
       role: string
       phone: string
       status: string
+      is_email_verified: boolean
       created_at: string
       updated_at: string
     }
@@ -67,6 +68,7 @@ export interface UserProfileResponse {
     role: string
     phone: string
     status: string
+    is_email_verified: boolean
     created_at: string
     updated_at: string
   }
@@ -1053,6 +1055,23 @@ class ApiService {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
+    })
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/api/users/resend-verification/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFTOKEN': 'ZLmPPNBAbBD331Srbj8IzjchsQKpNUH36A7SaR1KrqvtD9PFSSHEnMBDS2pxlL12'
+      },
+      body: JSON.stringify({ email })
+    })
+  }
+
+  async verifyEmail(token: string): Promise<{ success: boolean; message: string; data?: unknown; status_code: number; error?: string }> {
+    return this.request<{ success: boolean; message: string; data?: unknown; status_code: number; error?: string }>(`/api/users/verify-email/?token=${token}`, {
+      method: 'GET'
     })
   }
 }

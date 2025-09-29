@@ -18,6 +18,7 @@ export function LoginForm() {
     password: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [verificationMessage, setVerificationMessage] = useState('')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -50,8 +51,12 @@ export function LoginForm() {
 
     if (!validateForm()) return
 
+    setVerificationMessage('')
+
     try {
       await loginWithAPI(formData)
+
+      // Allow all users to access dashboard, but they'll be prompted to verify when doing CRUD operations
       router.push('/dashboard')
     } catch {
       // Error handling is done in the store
@@ -114,6 +119,12 @@ export function LoginForm() {
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded text-sm">
                   {error}
+                </div>
+              )}
+
+              {verificationMessage && (
+                <div className="bg-blue-50 border border-blue-200 text-blue-600 px-3 py-2 rounded text-sm">
+                  {verificationMessage}
                 </div>
               )}
 

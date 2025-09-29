@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
 import { useJobApplicationStore } from '@/store/jobApplicationStore'
+import { useApiWithVerification } from '@/hooks/useApiWithVerification'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { cn } from '@/lib/utils'
@@ -33,6 +34,7 @@ export default function JobsPage() {
   const { isAuthenticated, user, isInitialized } = useAuthStore()
   const { isSidebarCollapsed } = useUIStore()
   const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
+  const { callApi } = useApiWithVerification()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -476,7 +478,12 @@ export default function JobsPage() {
                               ) : (
                                 <Button
                                   size="sm"
-                                  onClick={() => checkAndApply(job.id)}
+                                  onClick={() => callApi(
+                                    async () => {
+                                      await checkAndApply(job.id)
+                                    },
+                                    'apply to job'
+                                  )}
                                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 text-xs sm:text-sm font-medium"
                                 >
                                   Apply

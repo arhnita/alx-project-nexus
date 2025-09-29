@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { apiService, CompanyCreateData, ApiError, Company } from '@/services/api'
+import { useApiWithVerification } from '@/hooks/useApiWithVerification'
 import { Building2, Globe, Phone, FileText, X, CheckCircle } from 'lucide-react'
 
 interface CompanyModalProps {
@@ -26,6 +27,7 @@ export function CompanyModal({ isOpen, onClose, onSuccess, company }: CompanyMod
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [success, setSuccess] = useState(false)
+  const { callApi } = useApiWithVerification()
 
   useEffect(() => {
     if (isOpen && company) {
@@ -115,11 +117,21 @@ export function CompanyModal({ isOpen, onClose, onSuccess, company }: CompanyMod
     setError(null)
 
     try {
-      if (isEditing && company) {
-        await apiService.updateCompany(company.id, formData)
-      } else {
-        await apiService.createCompany(formData)
-      }
+      await callApi(
+        () => {
+          if (isEditing && company) {
+            return apiService.updateCompany(company.id, formData)
+          } else {
+            return apiService.createCompany(formData)
+          }
+        },
+        isEditing ? 'updating company' : 'creating a company',
+        (errorMessage) => {
+          // Handle non-verification errors
+          setError(errorMessage)
+          setFieldErrors({})
+        }
+      )
 
       setSuccess(true)
 
@@ -138,17 +150,13 @@ export function CompanyModal({ isOpen, onClose, onSuccess, company }: CompanyMod
       }, 2000)
 
     } catch (err) {
+      // Handle field-specific errors from API if not a verification error
       if (err instanceof ApiError && err.errors) {
-        // Handle field-specific errors from API
         setFieldErrors(err.errors)
         setError(err.message || 'Please correct the errors below')
-      } else {
-        const errorMessage = err instanceof ApiError
-          ? err.message
-          : `Failed to ${isEditing ? 'update' : 'create'} company`
-        setError(errorMessage)
-        setFieldErrors({})
       }
+      // Verification errors are handled by callApi
+      console.error('Company operation failed:', err)
     } finally {
       setIsLoading(false)
     }

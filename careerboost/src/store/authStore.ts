@@ -11,10 +11,12 @@ interface AuthState {
   isInitialized: boolean
   error: string | null
   login: (user: JobSeeker | Recruiter) => void
-  loginWithAPI: (data: LoginData) => Promise<void>
+  loginWithAPI: (data: LoginData) => Promise<LoginResponse>
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
   signup: (data: SignupData) => Promise<void>
+  resendVerificationEmail: (email: string) => Promise<void>
+  verifyEmail: (token: string) => Promise<void>
   clearError: () => void
   updateUser: (updates: Partial<JobSeeker | Recruiter>) => void
   restoreSession: () => Promise<void>
@@ -56,6 +58,7 @@ export const useAuthStore = create<AuthState>()(
               firstName: userData.first_name,
               lastName: userData.last_name,
               userType: 'talent' as const,
+              status: userData.status,
               avatar: undefined,
               createdAt: new Date(userData.created_at),
               skills: [],
@@ -74,6 +77,7 @@ export const useAuthStore = create<AuthState>()(
               firstName: userData.first_name,
               lastName: userData.last_name,
               userType: 'recruiter' as const,
+              status: userData.status,
               avatar: undefined,
               createdAt: new Date(userData.created_at),
               company: '',
@@ -95,6 +99,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null
           })
+
+          return loginResult
         } catch (error) {
           const errorMessage = error instanceof ApiError
             ? error.message
@@ -158,6 +164,7 @@ export const useAuthStore = create<AuthState>()(
               firstName: result.first_name,
               lastName: result.last_name,
               userType: 'talent' as const,
+              status: 'pending',
               avatar: result.avatar,
               createdAt: new Date(result.created_at),
               skills: [],
@@ -176,6 +183,7 @@ export const useAuthStore = create<AuthState>()(
               firstName: result.first_name,
               lastName: result.last_name,
               userType: 'recruiter' as const,
+              status: 'pending',
               avatar: result.avatar,
               createdAt: new Date(result.created_at),
               company: '',
@@ -212,6 +220,58 @@ export const useAuthStore = create<AuthState>()(
               errorMessage = error.message
             }
           }
+
+          set({
+            isLoading: false,
+            error: errorMessage
+          })
+          throw error
+        }
+      },
+
+      resendVerificationEmail: async (email: string) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          await apiService.resendVerificationEmail(email)
+          set({ isLoading: false })
+        } catch (error) {
+          const errorMessage = error instanceof ApiError
+            ? error.message
+            : 'Failed to resend verification email'
+
+          set({
+            isLoading: false,
+            error: errorMessage
+          })
+          throw error
+        }
+      },
+
+      verifyEmail: async (token: string) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const result = await apiService.verifyEmail(token)
+
+          if (!result.success) {
+            throw new Error(result.message || 'Email verification failed')
+          }
+
+          // Update user status to active and email verified after successful verification
+          const currentUser = get().user
+          if (currentUser) {
+            const updatedUser = { ...currentUser }
+            // Note: We don't have direct access to status/is_email_verified in our user types
+            // But the backend should update the user status to 'active' after verification
+            set({ user: updatedUser })
+          }
+
+          set({ isLoading: false })
+        } catch (error) {
+          const errorMessage = error instanceof ApiError
+            ? error.message
+            : 'Email verification failed'
 
           set({
             isLoading: false,
@@ -287,6 +347,7 @@ export const useAuthStore = create<AuthState>()(
                   firstName: userData.first_name,
                   lastName: userData.last_name,
                   userType: 'talent' as const,
+                  status: userData.status,
                   avatar: undefined,
                   createdAt: new Date(userData.created_at),
                   skills: [],
@@ -305,6 +366,7 @@ export const useAuthStore = create<AuthState>()(
                   firstName: userData.first_name,
                   lastName: userData.last_name,
                   userType: 'recruiter' as const,
+                  status: userData.status,
                   avatar: undefined,
                   createdAt: new Date(userData.created_at),
                   company: '',

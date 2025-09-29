@@ -4,6 +4,7 @@ export interface User {
   firstName: string
   lastName: string
   userType: 'talent' | 'recruiter'
+  status: string
   avatar?: string
   createdAt: Date
 }

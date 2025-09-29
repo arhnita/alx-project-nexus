@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { apiService, FeedItem, FeedResponse } from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 import { useJobApplicationStore } from '@/store/jobApplicationStore'
+import { useApiWithVerification } from '@/hooks/useApiWithVerification'
 import { JobApplicationModal } from '@/components/modals/JobApplicationModal'
 import {
   Briefcase,
@@ -28,6 +29,7 @@ interface ActivityFeedProps {
 export function ActivityFeed({ className }: ActivityFeedProps) {
   const { user } = useAuthStore()
   const { checkAndApply, isJobApplied, loadAppliedJobs } = useJobApplicationStore()
+  const { callApi } = useApiWithVerification()
   const router = useRouter()
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,7 +104,12 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
     setApplyingJobs(prev => new Set(prev).add(jobId))
 
     try {
-      await checkAndApply(jobId)
+      await callApi(
+        async () => {
+          await checkAndApply(jobId)
+        },
+        'apply to job'
+      )
       // Success handling is done in the store
     } catch (err) {
       console.error('Failed to apply to job:', err)

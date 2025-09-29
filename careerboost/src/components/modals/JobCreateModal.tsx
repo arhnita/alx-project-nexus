@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { apiService, JobCreateData, ApiError, Company, Country, State, City, Skill } from '@/services/api'
+import { apiService, JobCreateData, Company, Country, State, City, Skill } from '@/services/api'
 import { useSkillsStore } from '@/store/skillsStore'
+import { useApiWithVerification } from '@/hooks/useApiWithVerification'
 import { Building2, DollarSign, MapPin, FileText, X, ChevronDown } from 'lucide-react'
 
 interface JobCreateModalProps {
@@ -42,6 +43,7 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
   const [skillSearchTerm, setSkillSearchTerm] = useState('')
   const [showSkillDropdown, setShowSkillDropdown] = useState(false)
   const { fetchAllSkills, skills } = useSkillsStore()
+  const { callApi } = useApiWithVerification()
 
   const fetchSkills = useCallback(async () => {
     try {
@@ -218,7 +220,11 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
         city: 1 // Placeholder city ID - will need to be updated when city selection is implemented
       }
 
-      await apiService.createJob(jobData)
+      await callApi(
+        () => apiService.createJob(jobData),
+        'posting a job',
+        (errorMessage) => setError(errorMessage)
+      )
 
       setSuccess(true)
 
@@ -242,8 +248,8 @@ export function JobCreateModal({ isOpen, onClose, onSuccess }: JobCreateModalPro
       }, 2000)
 
     } catch (err) {
-      const errorMessage = err instanceof ApiError ? err.message : 'Failed to create job'
-      setError(errorMessage)
+      // Verification errors are handled by callApi, only handle non-verification errors here
+      console.error('Job creation failed:', err)
     } finally {
       setIsLoading(false)
     }

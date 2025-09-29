@@ -8,9 +8,10 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { apiService, UserProfileResponse, UpdateProfileData, FileUpload, FileListResponse } from '@/services/api'
-import { User, Mail, Phone, Calendar, Shield, Edit, Save, X, Eye, EyeOff, FileText } from 'lucide-react'
+import { User, Mail, Phone, Calendar, Shield, Edit, Save, X, Eye, EyeOff, FileText, AlertCircle, CheckCircle } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { FileUpload as FileUploadComponent } from '@/components/ui/FileUpload'
+import { useApiWithVerification } from '@/hooks/useApiWithVerification'
 
 interface UserProfile {
   id: number
@@ -21,12 +22,14 @@ interface UserProfile {
   role: string
   phone: string
   status: string
+  is_email_verified: boolean
   created_at: string
   updated_at: string
 }
 
 export default function ProfilePage() {
   const { isAuthenticated, user, isInitialized } = useAuthStore()
+  const { callApi } = useApiWithVerification()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,53 +51,10 @@ export default function ProfilePage() {
   const [resumeFile, setResumeFile] = useState<FileUpload | null>(null)
   const [coverLetterFile, setCoverLetterFile] = useState<FileUpload | null>(null)
   const [documentsLoading, setDocumentsLoading] = useState(false)
+  const [isResendingVerification, setIsResendingVerification] = useState(false)
+  const [verificationMessage, setVerificationMessage] = useState('')
 
-  const fetchDocuments = useCallback(async () => {
-    if (!user || user.userType !== 'talent') return
-
-    try {
-      setDocumentsLoading(true)
-      const response: FileListResponse = await apiService.getUploadedFiles(undefined, 1, 20)
-
-      const resume = response.results.find(file => file.type === 'resume')
-      const coverLetter = response.results.find(file => file.type === 'cover_letter')
-
-      setResumeFile(resume || null)
-      setCoverLetterFile(coverLetter || null)
-    } catch (err) {
-      console.error('Failed to fetch documents:', err)
-    } finally {
-      setDocumentsLoading(false)
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
-      router.push('/login')
-      return
-    }
-
-    fetchProfile()
-    fetchDocuments()
-  }, [isInitialized, isAuthenticated, router, fetchDocuments])
-
-  const handleResumeUpload = (file: FileUpload) => {
-    setResumeFile(file)
-  }
-
-  const handleCoverLetterUpload = (file: FileUpload) => {
-    setCoverLetterFile(file)
-  }
-
-  const handleResumeDelete = () => {
-    setResumeFile(null)
-  }
-
-  const handleCoverLetterDelete = () => {
-    setCoverLetterFile(null)
-  }
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -115,12 +75,100 @@ export default function ProfilePage() {
       } else {
         setError(response.message || 'Failed to load profile data')
       }
-    } catch (err) {
-      setError('Failed to load profile data')
-      console.error('Profile fetch error:', err)
+    } catch (err: unknown) {
+      // Special handling for email verification errors
+      const error = err as { message?: string; status_code?: number }
+      if (error?.message?.includes('Email verification required') || error?.status_code === 403) {
+        // Create a minimal profile from user data for verification purposes
+        if (user) {
+          const minimalProfile: UserProfile = {
+            id: parseInt(user.id),
+            username: user.email.split('@')[0], // Fallback username
+            email: user.email,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            role: user.userType === 'talent' ? 'talent' : 'recruiter',
+            phone: '', // Will be empty until they can update
+            status: 'pending',
+            is_email_verified: false,
+            created_at: user.createdAt.toISOString(),
+            updated_at: user.createdAt.toISOString()
+          }
+          setProfile(minimalProfile)
+          setEditForm({
+            username: minimalProfile.username,
+            email: minimalProfile.email,
+            first_name: minimalProfile.first_name,
+            last_name: minimalProfile.last_name,
+            role: minimalProfile.role,
+            phone: minimalProfile.phone,
+            status: minimalProfile.status,
+            password: ''
+          })
+          setError(null) // Clear error since we have fallback data
+        } else {
+          setError('Please verify your email to access full profile features')
+        }
+      } else {
+        setError('Failed to load profile data')
+        console.error('Profile fetch error:', error)
+      }
     } finally {
       setLoading(false)
     }
+  }, [user])
+
+  const fetchDocuments = useCallback(async () => {
+    if (!user || user.userType !== 'talent') return
+
+    try {
+      setDocumentsLoading(true)
+      const response: FileListResponse = await apiService.getUploadedFiles(undefined, 1, 20)
+
+      const resume = response.results.find(file => file.type === 'resume')
+      const coverLetter = response.results.find(file => file.type === 'cover_letter')
+
+      setResumeFile(resume || null)
+      setCoverLetterFile(coverLetter || null)
+    } catch (err: unknown) {
+      // Silently handle verification errors for documents
+      const error = err as { message?: string; status_code?: number }
+      if (error?.message?.includes('Email verification required') || error?.status_code === 403) {
+        // Don't show error, just leave documents empty
+        setResumeFile(null)
+        setCoverLetterFile(null)
+      } else {
+        console.error('Failed to fetch documents:', error)
+      }
+    } finally {
+      setDocumentsLoading(false)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (isInitialized && !isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
+    fetchProfile()
+    fetchDocuments()
+  }, [isInitialized, isAuthenticated, router, fetchProfile, fetchDocuments])
+
+  const handleResumeUpload = (file: FileUpload) => {
+    setResumeFile(file)
+  }
+
+  const handleCoverLetterUpload = (file: FileUpload) => {
+    setCoverLetterFile(file)
+  }
+
+  const handleResumeDelete = () => {
+    setResumeFile(null)
+  }
+
+  const handleCoverLetterDelete = () => {
+    setCoverLetterFile(null)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -164,23 +212,34 @@ export default function ProfilePage() {
 
     setSaving(true)
     try {
-      // Use PUT for complete update
-      const updateData = { ...editForm }
-      if (!updateData.password) {
-        delete updateData.password // Don't send empty password
-      }
+      await callApi(
+        async () => {
+          // Use PUT for complete update
+          const updateData = { ...editForm }
+          if (!updateData.password) {
+            delete updateData.password // Don't send empty password
+          }
 
-      const response = await apiService.updateProfilePut(updateData as UpdateProfileData)
+          const response = await apiService.updateProfilePut(updateData as UpdateProfileData)
 
-      if (response.success) {
-        setProfile(response.data)
-        setIsEditing(false)
-        setEditForm(prev => ({ ...prev, password: '' })) // Clear password field
-      } else {
-        setError(response.message || 'Failed to update profile')
-      }
+          if (response.success) {
+            setProfile(response.data)
+            setIsEditing(false)
+            setEditForm(prev => ({ ...prev, password: '' })) // Clear password field
+            setError(null)
+          } else {
+            setError(response.message || 'Failed to update profile')
+          }
+
+          return response
+        },
+        'update your profile',
+        (errorMessage) => {
+          setError(errorMessage)
+        }
+      )
     } catch (err) {
-      setError('Failed to update profile')
+      // Error already handled by callApi
       console.error('Update error:', err)
     } finally {
       setSaving(false)
@@ -203,6 +262,30 @@ export default function ProfilePage() {
     }
     setIsEditing(false)
     setErrors({})
+  }
+
+  const handleResendVerification = async () => {
+    if (!profile?.email) return
+
+    setIsResendingVerification(true)
+    setVerificationMessage('')
+
+    try {
+      await apiService.resendVerificationEmail(profile.email)
+      // Redirect to OTP input page after successful resend
+      router.push(`/verify-email?email=${encodeURIComponent(profile.email)}`)
+    } catch {
+      setVerificationMessage('Failed to send verification email. Please try again.')
+      setTimeout(() => setVerificationMessage(''), 5000)
+    } finally {
+      setIsResendingVerification(false)
+    }
+  }
+
+  const handleVerifyEmail = () => {
+    if (profile?.email) {
+      router.push(`/verify-email?email=${encodeURIComponent(profile.email)}`)
+    }
   }
 
   if (loading) {
@@ -292,10 +375,21 @@ export default function ProfilePage() {
                       </span>
                       <div className="mt-4">
                         {!isEditing ? (
-                          <Button className="w-full" onClick={() => setIsEditing(true)}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Profile
-                          </Button>
+                          <>
+                            <Button
+                              className="w-full"
+                              onClick={() => setIsEditing(true)}
+                              disabled={!profile.is_email_verified}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Profile
+                            </Button>
+                            {!profile.is_email_verified && (
+                              <p className="text-xs text-gray-500 text-center mt-2">
+                                Verify your email to edit profile
+                              </p>
+                            )}
+                          </>
                         ) : (
                           <div className="space-y-2">
                             <Button
@@ -495,6 +589,107 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
 
+                {/* Email Verification Card */}
+                <Card className="mt-6" id="verify-email">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Mail className="w-5 h-5 mr-2" />
+                      Email Verification
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        {profile.is_email_verified ? (
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                        ) : (
+                          <AlertCircle className="w-6 h-6 text-yellow-600" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {profile.is_email_verified ? 'Email Verified' : 'Email Not Verified'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {profile.is_email_verified
+                                ? 'Your email address has been verified and you can access all features.'
+                                : 'Please verify your email address to access all features like applying to jobs and creating job posts.'
+                              }
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Email: <span className="font-medium">{profile.email}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {!profile.is_email_verified && (
+                          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                            {/* For pending users, only show resend option since OTP would have expired */}
+                            {profile.status === 'pending' ? (
+                              <Button
+                                variant="outline"
+                                onClick={handleResendVerification}
+                                loading={isResendingVerification}
+                                disabled={isResendingVerification}
+                              >
+                                Resend Verification Email
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={handleVerifyEmail}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  <Mail className="w-4 h-4 mr-2" />
+                                  Verify Email Now
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={handleResendVerification}
+                                  loading={isResendingVerification}
+                                  disabled={isResendingVerification}
+                                >
+                                  Resend Verification Email
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {verificationMessage && (
+                          <div className={`mt-3 p-3 rounded-lg text-sm ${
+                            verificationMessage.includes('Failed')
+                              ? 'bg-red-50 border border-red-200 text-red-700'
+                              : 'bg-green-50 border border-green-200 text-green-700'
+                          }`}>
+                            {verificationMessage}
+                          </div>
+                        )}
+
+                        {!profile.is_email_verified && (
+                          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div className="flex items-start space-x-2">
+                              <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                              <div className="text-xs text-yellow-700">
+                                <p className="font-medium mb-1">Verification Required</p>
+                                <p>Until you verify your email, you won&apos;t be able to:</p>
+                                <ul className="list-disc list-inside mt-1 space-y-0.5">
+                                  <li>Apply to job postings</li>
+                                  <li>Create job posts (for recruiters)</li>
+                                  <li>Update your profile information</li>
+                                  <li>Upload documents</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Account Information Card */}
                 <Card className="mt-6">
                   <CardHeader>
@@ -532,11 +727,24 @@ export default function ProfilePage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
+                      {!profile.is_email_verified && (
+                        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <AlertCircle className="w-5 h-5 text-yellow-600" />
+                            <div>
+                              <p className="text-sm font-medium text-yellow-800">Email Verification Required</p>
+                              <p className="text-xs text-yellow-700 mt-1">
+                                Please verify your email address to upload and manage documents.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {documentsLoading ? (
                         <div className="flex items-center justify-center h-32">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
-                      ) : (
+                      ) : profile.is_email_verified ? (
                         <div className="space-y-6">
                           {/* Resume Upload */}
                           <div className="w-full">
@@ -567,6 +775,12 @@ export default function ProfilePage() {
                               onDeleteSuccess={handleCoverLetterDelete}
                             />
                           </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-600 mb-2">Document uploads are disabled</p>
+                          <p className="text-sm text-gray-500">Please verify your email to upload documents</p>
                         </div>
                       )}
 
