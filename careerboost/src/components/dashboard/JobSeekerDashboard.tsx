@@ -72,11 +72,11 @@ export function JobSeekerDashboard() {
             `You have ${weeklyMatches} new job match${weeklyMatches !== 1 ? 'es' : ''} this week. Keep building your profile!`
           )}
         </p>
-        <div className="flex gap-3">
-          <Button variant="secondary" size="sm">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => router.push('/jobs')}>
             View Recommendations
           </Button>
-          <Button variant="outline" size="sm" className="border-blue-400 text-blue-100 hover:bg-blue-600">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto border-blue-400 text-blue-100 hover:bg-blue-600" onClick={() => router.push('/profile')}>
             Update Profile
           </Button>
         </div>

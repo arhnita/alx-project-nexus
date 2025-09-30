@@ -38,12 +38,16 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="sm:flex">
-        <Sidebar />
+      <div className="flex">
+        {/* Sidebar - hidden on mobile, visible on desktop */}
+        <div className="hidden sm:block">
+          <Sidebar />
+        </div>
+
         <main className={cn(
-          'flex-1 p-4 sm:p-6 md:p-8 transition-all duration-300',
+          'flex-1 p-4 sm:p-6 md:p-8 transition-all duration-300 min-w-0',
           // Adjust left margin based on sidebar state on desktop
-          isSidebarCollapsed ? 'sm:ml-12' : 'sm:ml-0',
+          isSidebarCollapsed ? 'sm:ml-0' : 'sm:ml-0',
           // No left margin on mobile
           'ml-0'
         )}>

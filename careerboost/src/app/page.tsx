@@ -78,22 +78,24 @@ export default function HomePage() {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                 <span className="text-white font-bold text-lg">C</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">Connect Hire</span>
+              <span className="text-lg sm:text-xl font-bold text-gray-900 truncate">Connect Hire</span>
             </Link>
 
             <nav className="hidden md:flex items-center space-x-8">
               {/* Navigation items removed for cleaner design */}
             </nav>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-3">
               <Link href="/login">
-                <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                  Sign in
+                <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm px-2 sm:px-4">
+                  <span className="hidden sm:inline">Sign in</span>
+                  <span className="sm:hidden">Login</span>
                 </Button>
               </Link>
               <Link href="/register">
-                <Button>
-                  Get started
+                <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
+                  <span className="hidden sm:inline">Get started</span>
+                  <span className="sm:hidden">Join</span>
                 </Button>
               </Link>
             </div>
@@ -103,23 +105,23 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
               Find Your Dream Job{' '}
               <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                 Today
               </span>
             </h1>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Connect with top employers, showcase your skills, and land the perfect opportunity.
               Whether you&apos;re looking for your next role or the perfect candidate, we&apos;ve got you covered.
             </p>
-            <div className="flex justify-center">
-              <Link href="/register">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+            <div className="flex justify-center px-4">
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto text-sm sm:text-base">
                   Start Your Journey
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </Link>
             </div>
@@ -128,13 +130,13 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-12 sm:py-16 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-10 sm:mb-12 md:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Everything You Need to Succeed
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
               Powerful tools for job seekers and recruiters to connect and grow together
             </p>
           </div>
@@ -159,13 +161,13 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-10 sm:mb-12 md:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               What Our Users Say
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 px-4">
               Join thousands of professionals who found success with Connect Hire
             </p>
           </div>
@@ -199,22 +201,22 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-600">
+      <section className="py-12 sm:py-16 md:py-20 bg-blue-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-6 sm:mb-8">
             Join Connect Hire today and take the next step in your career journey
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button size="lg" variant="secondary" className="w-full sm:w-auto text-sm sm:text-base">
                 Create Account
               </Button>
             </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-50 hover:text-blue-600">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-50 hover:text-blue-600 text-sm sm:text-base">
                 Sign In
               </Button>
             </Link>

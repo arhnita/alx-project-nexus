@@ -71,10 +71,13 @@ export function RecruiterDashboard() {
             `You have ${todayInterviewsCount} interview${todayInterviewsCount !== 1 ? 's' : ''} today and ${weeklyApplications} new application${weeklyApplications !== 1 ? 's' : ''} this week.`
           )}
         </p>
-        <div className="flex gap-3">
-          <Button variant="secondary" size="sm" onClick={() => router.push('/my-jobs')}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => router.push('/my-jobs')}>
             <Plus className="w-4 h-4 mr-2" />
             Post New Job
+          </Button>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto border-purple-400 text-purple-100 hover:bg-purple-600" onClick={() => router.push('/applications')}>
+            View Applications
           </Button>
         </div>
       </div>

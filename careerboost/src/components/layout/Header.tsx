@@ -15,7 +15,11 @@ import {
   User,
   LogOut,
   ChevronDown,
-  Award
+  Award,
+  LayoutDashboard,
+  FileText,
+  Briefcase,
+  Building2
 } from 'lucide-react'
 
 export function Header() {
@@ -181,15 +185,94 @@ export function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && isAuthenticated && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            <nav className="space-y-2">
+          <div className="md:hidden py-4 border-t border-gray-200 bg-white">
+            <nav className="space-y-1 px-4">
               <Link
                 href="/dashboard"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
+                <LayoutDashboard className="w-5 h-5 mr-3 text-gray-400" />
                 Dashboard
               </Link>
+
+              {isJobSeeker ? (
+                <>
+                  <Link
+                    href="/jobs"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Search className="w-5 h-5 mr-3 text-gray-400" />
+                    Find Jobs
+                  </Link>
+                  <Link
+                    href="/applications"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FileText className="w-5 h-5 mr-3 text-gray-400" />
+                    Applications
+                  </Link>
+                  <Link
+                    href="/skills"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Award className="w-5 h-5 mr-3 text-gray-400" />
+                    Skills
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/my-jobs"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Briefcase className="w-5 h-5 mr-3 text-gray-400" />
+                    Job Postings
+                  </Link>
+                  <Link
+                    href="/applications"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FileText className="w-5 h-5 mr-3 text-gray-400" />
+                    Applications
+                  </Link>
+                  <Link
+                    href="/company"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Building2 className="w-5 h-5 mr-3 text-gray-400" />
+                    Company
+                  </Link>
+                </>
+              )}
+
+              <hr className="my-3" />
+
+              <Link
+                href="/profile"
+                className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <User className="w-5 h-5 mr-3 text-gray-400" />
+                Profile
+              </Link>
+
+              <button
+                onClick={() => {
+                  handleLogout()
+                  setIsMenuOpen(false)
+                }}
+                className="flex items-center w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium"
+              >
+                <LogOut className="w-5 h-5 mr-3" />
+                Sign out
+              </button>
             </nav>
           </div>
         )}
